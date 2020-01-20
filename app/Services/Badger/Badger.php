@@ -2,14 +2,12 @@
 
 namespace App\Services\Badger;
 
-// use FtpClient\FtpClient;
 use phpseclib\Net\SFTP;
 use Illuminate\Support\Facades\File;
 
 class Badger {
 
     const REMOTE_PATH = "dropbox/incoming/accounts";
-    // const REMOTE_PATH = "/dropbox";
 
     private $ftpClient;
     private $fileName;
@@ -41,7 +39,7 @@ class Badger {
     private function createCSVFile($data)
     {
         $data = collect($data);
-        $file = fopen($this->filePath(), 'w');
+        $file = fopen($this->localFile(), 'w');
 
         $keys = array_keys($data->first());
 
@@ -58,8 +56,6 @@ class Badger {
         try {
             $file = File::get($this->localFile());
             $this->ftpClient->put($this->remoteFile(), $file);
-            // dd($this->ftpClient);
-            // $this->ftpClient->scanDir());
         } catch (\Exception $e) {
             dd($e->getMessage());
         }
