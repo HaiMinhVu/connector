@@ -1,6 +1,7 @@
 /public/storage
 /storage/*.key
 /vendor
+/database/sqlite/*.sq3
 .env
 .env.backup
 .phpunit.result.cache
