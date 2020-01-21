@@ -21,6 +21,7 @@ use App\Services\NetSuite\Customer\{
     Record as NSCustomerRecord
 };
 use App\Services\Badger\Badger as BadgerService;
+use Carbon\Carbon;
 
 /**
  * Class deletePostsCommand
@@ -30,12 +31,19 @@ use App\Services\Badger\Badger as BadgerService;
  */
 class SyncBadgerAccounts extends Command
 {
+    const NETSUITE_SAVED_SEARCH_ID = 'customsearch_badger_sync';
+
+    private $savedSearch;
+    private $bar;
+    private $response;
+    private $totalPages;
+
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $signature = "sync:badger";
+    protected $signature = "sync:badger {--from-date= : Specify the last modified date for results}";
 
     /**
      * The console command description.
@@ -53,34 +61,57 @@ class SyncBadgerAccounts extends Command
     public function handle()
     {
         $this->info("Retrieving data from NetSuite");
-        $NSCust = new NSSavedSearch('customsearch_badger_sync');
+        $this->initSavedSearch();
+        $this->setFromDate();
 
-        $response = $NSCust->search();
-        $totalPages = $NSCust->getTotalPages();
-
-        $bar = $this->output->createProgressBar($totalPages);
-        $bar->start();
+        $this->runInitialSearch();
+        $this->initProgressBar();
 
         $this->info("Updating local data");
-        $this->updateAccounts($response);
-        $bar->advance();
+        $this->updateAccounts($this->response);
 
-        for($page=2;$page<=$totalPages;$page++) {
-            $response = $NSCust->search($page);
-            $this->updateAccounts($response);
-
-            $bar->advance();
-        }
-
-        $bar->finish();
+        $this->runSearches();
 
         $this->info("Pushing to Badger Maps");
         $this->pushToBadger();
     }
 
-    public function updateAccounts($response)
+    private function initSavedSearch()
     {
-        $this->info("Retrieving data from NetSuite");
+        $this->savedSearch = new NSSavedSearch(self::NETSUITE_SAVED_SEARCH_ID);
+    }
+
+    private function runInitialSearch()
+    {
+        $this->response = $this->savedSearch->search();
+        $this->totalPages = $this->savedSearch->getTotalPages();
+    }
+
+    private function runSearches()
+    {
+        $this->bar->advance();
+        for($page=2;$page<=$this->totalPages;$page++) {
+            $this->response = $this->savedSearch->search($page);
+            $this->updateAccounts($this->response);
+            $this->bar->advance();
+        }
+        $this->bar->finish();
+    }
+
+    private function initProgressBar()
+    {
+        $this->bar = $this->output->createProgressBar($this->totalPages);
+        $this->bar->start();
+    }
+
+    private function setFromDate()
+    {
+        $fromDate = ($this->option('from-date') === null) ? Carbon::now()->subDay() : $this->option('from-date');
+        $this->savedSearch->setFromDate($fromDate);
+    }
+
+    private function updateAccounts($response)
+    {
         $response->map(function($account){
             $badgerAccount = BadgerAccount::firstOrNew(['nsid' => $account['nsid']]);
             $badgerAccount->fill($account);

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d39b2655177cb925f5d7a8e61d1fb867",
+    "content-hash": "7fbf894f65148addfc887d1c9b71e3c6",
     "packages": [
         {
             "name": "doctrine/inflector",
@@ -1613,55 +1613,6 @@
                 "time"
             ],
             "time": "2019-12-16T16:30:25+00:00"
-        },
-        {
-            "name": "nicolab/php-ftp-client",
-            "version": "v1.5.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Nicolab/php-ftp-client.git",
-                "reference": "8970bdb69b212779338624c0882c256e0833ff31"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Nicolab/php-ftp-client/zipball/8970bdb69b212779338624c0882c256e0833ff31",
-                "reference": "8970bdb69b212779338624c0882c256e0833ff31",
-                "shasum": ""
-            },
-            "require": {
-                "ext-ftp": "*",
-                "php": ">=5.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "FtpClient": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nicolas Tallefourtane",
-                    "email": "dev@nicolab.net",
-                    "homepage": "http://nicolab.net"
-                }
-            ],
-            "description": "A flexible FTP and SSL-FTP client for PHP. This lib provides helpers easy to use to manage the remote files.",
-            "homepage": "https://github.com/Nicolab/php-ftp-client",
-            "keywords": [
-                "file",
-                "ftp",
-                "helper",
-                "lib",
-                "server",
-                "sftp",
-                "ssl",
-                "ssl-ftp"
-            ],
-            "time": "2019-12-02T18:06:47+00:00"
         },
         {
             "name": "nikic/fast-route",

@@ -8,8 +8,13 @@ use App\Models\{
     CustEntity,
     SalesRep
 };
+use Carbon\Carbon;
 use NetSuite\Classes\{
+    CustomerSearch,
     CustomerSearchAdvanced,
+    CustomerSearchBasic,
+    SearchDateField,
+    SearchDateFieldOperator,
     SearchRequest,
     SearchMoreWithIdRequest
 };
@@ -25,6 +30,16 @@ class SavedSearch extends Service {
     {
         parent::__construct();
         $this->setSavedSearchScriptId($savedSearchScriptId);
+    }
+
+    public function setFromDate($dateString)
+    {
+        $fromDate = Carbon::parse($dateString)->toAtomString();
+        $this->search->criteria = new CustomerSearch();
+		$this->search->criteria->basic = new CustomerSearchBasic();
+		$this->search->criteria->basic->lastModifiedDate = new SearchDateField;
+		$this->search->criteria->basic->lastModifiedDate->operator = SearchDateFieldOperator::onOrAfter;
+		$this->search->criteria->basic->lastModifiedDate->searchValue = $fromDate;
     }
 
     public function getTotalPages()
@@ -56,7 +71,7 @@ class SavedSearch extends Service {
 
     public function search($page = 1)
     {
-        $response = Cache::remember("search_{$this->savedSearchScriptId}_{$page}", 900, function() use ($page) {
+        $response = Cache::remember("search_{$this->savedSearchScriptId}_{$page}", self::CACHE_SECONDS, function() use ($page) {
             if($page == 1) {
                 $this->setInitialRequest();
                 return $this->service->search($this->request);
