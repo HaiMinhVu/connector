@@ -6,22 +6,22 @@ return [
 
         'badgeraccounts' => [
             'driver' => 'sqlite',
-            'database' => '/home/bmatheus/Development/badger2ns/database/sqlite/badgeraccounts.sq3'
+            'database' => env('DB_BADGERACCOUNTS_LOCATION')
         ],
 
         'custom_entity_fields' => [
             'driver' => 'sqlite',
-            'database' => '/home/bmatheus/Development/badger2ns/database/sqlite/custom_entity_fields.sq3'
+            'database' => env('DB_CUSTOMENTITYFIELDS_LOCATION')
         ],
 
         'nsconnector' => [
             'driver' => 'sqlite',
-            'database' => '/home/bmatheus/Development/badger2ns/database/sqlite/nsconnector.sq3'
+            'database' => env('DB_NSCONNECTOR_LOCATION')
         ],
 
         'salesreps' => [
             'driver' => 'sqlite',
-            'database' => '/home/bmatheus/Development/badger2ns/database/sqlite/salesreps.sq3'
+            'database' => env('DB_SALESREPS_LOCATION')
         ]
 
     ]

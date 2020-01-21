@@ -17,7 +17,7 @@ use App\Models\{
     SalesRep
 };
 use App\Services\NetSuite\Customer\{
-    SavedSearch as NSSavedSearch,
+    SavedSearch as CustomerSavedSearch,
     Record as NSCustomerRecord
 };
 use App\Services\Badger\Badger as BadgerService;
@@ -31,7 +31,7 @@ use Carbon\Carbon;
  */
 class SyncBadgerAccounts extends Command
 {
-    const NETSUITE_SAVED_SEARCH_ID = 'customsearch_badger_sync';
+    const CUSTOMER_SAVED_SEARCH_ID = 'NETSUITE_SAVED_SEARCH_ID';
 
     private $savedSearch;
     private $bar;
@@ -65,9 +65,8 @@ class SyncBadgerAccounts extends Command
         $this->setFromDate();
 
         $this->runInitialSearch();
-        $this->initProgressBar();
-
         $this->info("Updating local data");
+        $this->initProgressBar();
         $this->updateAccounts($this->response);
 
         $this->runSearches();
@@ -78,7 +77,7 @@ class SyncBadgerAccounts extends Command
 
     private function initSavedSearch()
     {
-        $this->savedSearch = new NSSavedSearch(self::NETSUITE_SAVED_SEARCH_ID);
+        $this->savedSearch = new CustomerSavedSearch(self::NETSUITE_SAVED_SEARCH_ID);
     }
 
     private function runInitialSearch()
@@ -91,7 +90,13 @@ class SyncBadgerAccounts extends Command
     {
         $this->bar->advance();
         for($page=2;$page<=$this->totalPages;$page++) {
-            $this->response = $this->savedSearch->search($page);
+            try {
+                $this->response = $this->savedSearch->search($page);
+            } catch(\Exception $e) {
+                $this->error(PHP_EOL.$e->getMessage());
+                $this->info("Retrying page {$page}/{$this->savedSearch}");
+                $this->response = $this->savedSearch->search($page);
+            }
             $this->updateAccounts($this->response);
             $this->bar->advance();
         }

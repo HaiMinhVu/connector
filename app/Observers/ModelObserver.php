@@ -14,7 +14,9 @@ class ModelObserver
      */
     public function creating(Model $model)
     {
-        $model->crc = time();
+        $timestamp = time();
+        $model->crc = $timestamp;
+        $model->lastcrc = $timestamp;
     }
 
     /**
@@ -26,7 +28,6 @@ class ModelObserver
     public function updating(Model $model)
     {
         $timestamp = time();
-        // dd($model->crc);
         if(!$model->crc) {
             $model->crc = $timestamp;
         }

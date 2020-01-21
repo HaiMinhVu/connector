@@ -21,6 +21,8 @@ use NetSuite\Classes\{
 
 class SavedSearch extends Service {
 
+    const PER_PAGE = 10;
+
     private $request;
     private $savedSearchScriptId;
     private $previousSearchId;
@@ -53,6 +55,7 @@ class SavedSearch extends Service {
             $this->savedSearchScriptId = $savedSearchScriptId;
             $this->search = new CustomerSearchAdvanced();
             $this->search->savedSearchScriptId = $this->savedSearchScriptId;
+            $this->service->setSearchPreferences(false, self::PER_PAGE);
         }
     }
 
@@ -117,8 +120,12 @@ class SavedSearch extends Service {
 
     public function getCustomerRecords($nsid)
     {
-        $record = new Record();
-        $response = $record->getByNSID($nsid);
+        try {
+            $record = new Record();
+            $response = $record->getByNSID($nsid);
+        } catch(\Exception $e) {
+            dd($e->getMessage());
+        }
 
         $response->readResponse->record->customFieldList->customField = collect($response->readResponse->record->customFieldList->customField)->mapWithKeys(function($field){
             $key = CustEntity::getDescById($field->scriptId);
