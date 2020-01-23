@@ -41,6 +41,11 @@ class SyncSalesReps extends Command
      */
     protected $description = "Sync sales rep data to local database";
 
+    public function __construct(SalesRepSavedSearch $savedSearch)
+    {
+        parent::__construct();
+        $this->savedSearch = $savedSearch;
+    }
 
     /**
      * Execute the console command.
@@ -49,25 +54,21 @@ class SyncSalesReps extends Command
      */
     public function handle()
     {
-        $this->initSavedSearch();
-        $salesReps = $this->savedSearch->search();
-        $this->updateAccounts($salesReps);
+        dd(\Carbon\Carbon::parse('')->toAtomString());
+        // try {
+        //     $salesReps = $this->savedSearch->search();
+        //     $this->updateAccounts($salesReps);
+        // } catch(\Exception $e) {
+        //     $this->error($e->getMessage());
+        // }
     }
-
-    private function initSavedSearch()
-    {
-        $this->savedSearch = new SalesRepSavedSearch;
-    }
-
 
     private function updateAccounts($response)
     {
         $response->map(function($account){
             try {
-                $salesRep = SalesRep::firstOrNew(['nsid' => $account['nsid']]);
-                $salesRep->fill($account);
-                $salesRep->save();
-            } catch (\Exception $e) {
+                SalesRep::updateOrCreate(['nsid' => $account['nsid']], $account);
+            } catch(\Exception $e) {
                 $this->error($e->getMessage());
             }
         });

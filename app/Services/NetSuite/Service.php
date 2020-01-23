@@ -6,7 +6,7 @@ use NetSuite\NetSuiteService;
 
 class Service {
 
-    const CACHE_SECONDS = 3600;
+    const CACHE_SECONDS = 21600;
 
     protected $service;
 
