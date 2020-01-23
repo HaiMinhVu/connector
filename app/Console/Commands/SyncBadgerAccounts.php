@@ -121,7 +121,7 @@ class SyncBadgerAccounts extends Command
     private function updateAccounts($response)
     {
         $response->map(function($account){
-            $badgerAccount = BadgerAccount::updateOrCreate(['nsid' => $account['nsid']], $account);
+            BadgerAccount::updateOrCreate(['nsid' => $account['nsid']], $account);
         });
     }
 
