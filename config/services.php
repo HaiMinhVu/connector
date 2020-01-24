@@ -10,7 +10,7 @@ return [
 
     'netsuite' => [
         'endpoint' => env('NETSUITE_ENDPOINT', '2019_1'),
-        'host' => env('NETSUITE_HOST', 'https://1247539.suitetalk.api.netsuite.com'),
+        'host' => env('NETSUITE_HOST', 'https://webservices.netsuite.com'),
         'email' => env('NETSUITE_EMAIL'),
         'password' => env('NETSUITE_PASSWORD'),
         'role' => env('NETSUITE_ROLE'),

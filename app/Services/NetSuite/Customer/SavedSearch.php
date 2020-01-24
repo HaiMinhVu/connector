@@ -21,15 +21,17 @@ use NetSuite\Classes\{
 
 class SavedSearch extends Service {
 
+    const PER_PAGE = 100;
+    const NETSUITE_SAVED_SEARCH_ID = 'customsearch_badger_sync';
+
     private $request;
-    private $savedSearchScriptId;
     private $previousSearchId;
     private $totalPages;
 
-    public function __construct($savedSearchScriptId)
+    public function __construct()
     {
         parent::__construct();
-        $this->setSavedSearchScriptId($savedSearchScriptId);
+        $this->setSavedSearchScriptId();
     }
 
     public function setFromDate($dateString)
@@ -47,13 +49,11 @@ class SavedSearch extends Service {
         return $this->totalPages;
     }
 
-    public function setSavedSearchScriptId($savedSearchScriptId = null)
+    public function setSavedSearchScriptId()
     {
-        if($savedSearchScriptId) {
-            $this->savedSearchScriptId = $savedSearchScriptId;
-            $this->search = new CustomerSearchAdvanced();
-            $this->search->savedSearchScriptId = $this->savedSearchScriptId;
-        }
+        $this->search = new CustomerSearchAdvanced();
+        $this->search->savedSearchScriptId = self::NETSUITE_SAVED_SEARCH_ID;
+        $this->service->setSearchPreferences(false, self::PER_PAGE);
     }
 
     public function setInitialRequest()
@@ -71,21 +71,28 @@ class SavedSearch extends Service {
 
     public function search($page = 1)
     {
-        $response = Cache::remember("search_{$this->savedSearchScriptId}_{$page}", self::CACHE_SECONDS, function() use ($page) {
-            if($page == 1) {
-                $this->setInitialRequest();
-                return $this->service->search($this->request);
-            } else {
+        if($page == 1) {
+            $this->setInitialRequest();
+            $response = $this->service->search($this->request);
+        } else {
+            $response = Cache::remember($this->getCacheId($page), self::CACHE_SECONDS, function() use ($page) {
                 $this->setPaginatedRequest($page);
                 return $this->service->searchMoreWithId($this->request);
-            }
-        });
+            });
+        }
 
         $this->totalPages = $response->searchResult->totalPages;
         $this->previousSearchId = $response->searchResult->searchId;
 
         $results = collect($response->searchResult->searchRowList->searchRow);
         return $this->appendCustomerRecords($results);
+    }
+
+    private function getCacheId($page = 1)
+    {
+        $savedSearchScriptId = self::NETSUITE_SAVED_SEARCH_ID;
+        $perPage = self::PER_PAGE;
+        return "search_{$savedSearchScriptId}_{$page}_{$perPage}";
     }
 
     private function filterResults($results)
@@ -104,21 +111,30 @@ class SavedSearch extends Service {
     {
         $filteredResults = $this->filterResults($results);
 
-        return $filteredResults->map(function($result, $idx) {
-            $nsid = $result->basic->internalId[0]->searchValue->internalId;
-            $data = [
-                'customer' => $result,
-                'records' => $this->getCustomerRecords($nsid)
-            ];
-
-            return $this->netsuite2Badger($data);
+        return $filteredResults->map(function($result) {
+            return $this->formatRawData($result);
         });
+    }
+
+    public function formatRawData($result)
+    {
+        $nsid = $result->basic->internalId[0]->searchValue->internalId;
+        $data = [
+            'customer' => $result,
+            'records' => $this->getCustomerRecords($nsid)
+        ];
+
+        return $this->parseData($data);
     }
 
     public function getCustomerRecords($nsid)
     {
-        $record = new Record();
-        $response = $record->getByNSID($nsid);
+        try {
+            $record = new Record();
+            $response = $record->getByNSID($nsid);
+        } catch(\Exception $e) {
+            dd($e->getMessage());
+        }
 
         $response->readResponse->record->customFieldList->customField = collect($response->readResponse->record->customFieldList->customField)->mapWithKeys(function($field){
             $key = CustEntity::getDescById($field->scriptId);
@@ -137,12 +153,14 @@ class SavedSearch extends Service {
         return $response;
     }
 
-    private function netsuite2Badger($data) : array
+    private function parseData($data) : array
     {
         $customer = $data['customer'];
         $basic = $data['customer']->basic;
         $records = $data['records']->readResponse->record;
         $salesRep = SalesRep::where('nsid', $basic->salesRep[0]->searchValue->internalId)->first();
+        $type = optional($records->customFieldList->customField->get('Business Model'));
+        $isPerson = $type ? ($type->first() == 'Individual' ? 1 : 0) : 0;
 
         return [
             "_Name" => $records->companyName,
@@ -153,10 +171,11 @@ class SavedSearch extends Service {
             "Business Email" => $basic->email ? $basic->email[0]->searchValue : '',
             "Contact Name" => $records->contactRolesList->contactRoles[0]->contact->name,
             "Contact Email" => $records->contactRolesList->contactRoles[0]->email,
+            'is Person' => $isPerson,
             "Status" => $records->entityStatus->name,
             "url" => $records->url,
             "category" => $records->customFieldList->customField->get('Account Category'),
-            "territory" => $records->territory->name,
+            "territory" => optional($records->territory)->name,
             "lastModifiedDate" => $records->lastModifiedDate
         ];
     }

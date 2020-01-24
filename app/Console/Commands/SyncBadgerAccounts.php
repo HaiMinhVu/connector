@@ -17,7 +17,7 @@ use App\Models\{
     SalesRep
 };
 use App\Services\NetSuite\Customer\{
-    SavedSearch as NSSavedSearch,
+    SavedSearch as CustomerSavedSearch,
     Record as NSCustomerRecord
 };
 use App\Services\Badger\Badger as BadgerService;
@@ -31,12 +31,14 @@ use Carbon\Carbon;
  */
 class SyncBadgerAccounts extends Command
 {
-    const NETSUITE_SAVED_SEARCH_ID = 'customsearch_badger_sync';
+    const CUSTOMER_SAVED_SEARCH_ID = 'customsearch_badger_sync';
 
     private $savedSearch;
     private $bar;
     private $response;
     private $totalPages;
+    private $fromDate;
+    private $badgerService;
 
     /**
      * The console command name.
@@ -52,6 +54,12 @@ class SyncBadgerAccounts extends Command
      */
     protected $description = "Sync badger data";
 
+    public function __construct(BadgerService $badgerService, CustomerSavedSearch $savedSearch)
+    {
+        parent::__construct();
+        $this->badgerService = $badgerService;
+        $this->savedSearch = $savedSearch;
+    }
 
     /**
      * Execute the console command.
@@ -61,24 +69,17 @@ class SyncBadgerAccounts extends Command
     public function handle()
     {
         $this->info("Retrieving data from NetSuite");
-        $this->initSavedSearch();
         $this->setFromDate();
 
         $this->runInitialSearch();
-        $this->initProgressBar();
-
         $this->info("Updating local data");
+        $this->initProgressBar();
         $this->updateAccounts($this->response);
 
         $this->runSearches();
 
-        $this->info("Pushing to Badger Maps");
+        $this->info(PHP_EOL."Pushing to Badger Maps");
         $this->pushToBadger();
-    }
-
-    private function initSavedSearch()
-    {
-        $this->savedSearch = new NSSavedSearch(self::NETSUITE_SAVED_SEARCH_ID);
     }
 
     private function runInitialSearch()
@@ -91,9 +92,15 @@ class SyncBadgerAccounts extends Command
     {
         $this->bar->advance();
         for($page=2;$page<=$this->totalPages;$page++) {
-            $this->response = $this->savedSearch->search($page);
+            $this->bar->setProgress($page);
+            try {
+                $this->response = $this->savedSearch->search($page);
+            } catch(\Exception $e) {
+                $this->error(PHP_EOL.$e->getMessage());
+                $this->info("Retrying page {$page}/{$this->savedSearch->getTotalPages()}");
+                $this->response = $this->savedSearch->search($page);
+            }
             $this->updateAccounts($this->response);
-            $this->bar->advance();
         }
         $this->bar->finish();
     }
@@ -107,27 +114,23 @@ class SyncBadgerAccounts extends Command
     private function setFromDate()
     {
         $fromDate = ($this->option('from-date') === null) ? Carbon::now()->subDay() : $this->option('from-date');
+        $this->fromDate = Carbon::parse($fromDate)->startOfDay();
         $this->savedSearch->setFromDate($fromDate);
     }
 
     private function updateAccounts($response)
     {
         $response->map(function($account){
-            $badgerAccount = BadgerAccount::firstOrNew(['nsid' => $account['nsid']]);
-            $badgerAccount->fill($account);
-            $badgerAccount->save();
+            BadgerAccount::updateOrCreate(['nsid' => $account['nsid']], $account);
         });
     }
 
     private function pushToBadger()
     {
-        $data = BadgerAccount::limit(100)->get();
-        $badger = new BadgerService;
-        $data = $data->map(function($account){
-            $account = $account->attributesToArray();
-            $account['src'] = null;
-            return $account;
-        });
-        $badger->export($data->toArray());
+        try {
+            $this->badgerService->exportCustomers($this->fromDate);
+        } catch(\Exception $e) {
+            $this->error(PHP_EOL.$e->getMessage());
+        }
     }
 }

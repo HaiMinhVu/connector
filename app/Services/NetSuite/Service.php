@@ -6,15 +6,13 @@ use NetSuite\NetSuiteService;
 
 class Service {
 
-    const CACHE_SECONDS = 1800;
-    const PER_PAGE = 10;
+    const CACHE_SECONDS = 21600;
 
     protected $service;
 
     public function __construct()
     {
         $this->setService();
-        $this->service->setSearchPreferences(false, self::PER_PAGE);
     }
 
     private function setService()
