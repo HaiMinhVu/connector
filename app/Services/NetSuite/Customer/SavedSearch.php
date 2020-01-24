@@ -2,7 +2,6 @@
 
 namespace App\Services\NetSuite\Customer;
 
-use Illuminate\Support\Facades\Cache;
 use App\Services\NetSuite\Service;
 use App\Models\{
     CustEntity,
@@ -21,7 +20,7 @@ use NetSuite\Classes\{
 
 class SavedSearch extends Service {
 
-    const PER_PAGE = 100;
+    const PER_PAGE = 1000;
     const NETSUITE_SAVED_SEARCH_ID = 'customsearch_badger_sync';
 
     private $request;
@@ -75,24 +74,17 @@ class SavedSearch extends Service {
             $this->setInitialRequest();
             $response = $this->service->search($this->request);
         } else {
-            $response = Cache::remember($this->getCacheId($page), self::CACHE_SECONDS, function() use ($page) {
-                $this->setPaginatedRequest($page);
-                return $this->service->searchMoreWithId($this->request);
-            });
+            $this->setPaginatedRequest($page);
+            $response = $this->service->searchMoreWithId($this->request);
         }
 
         $this->totalPages = $response->searchResult->totalPages;
         $this->previousSearchId = $response->searchResult->searchId;
 
         $results = collect($response->searchResult->searchRowList->searchRow);
-        return $this->appendCustomerRecords($results);
-    }
-
-    private function getCacheId($page = 1)
-    {
-        $savedSearchScriptId = self::NETSUITE_SAVED_SEARCH_ID;
-        $perPage = self::PER_PAGE;
-        return "search_{$savedSearchScriptId}_{$page}_{$perPage}";
+        return $this->filterResults($results)->map(function($result){
+            return $this->parseInitialResult($result);
+        });
     }
 
     private function filterResults($results)
@@ -107,27 +99,17 @@ class SavedSearch extends Service {
         });
     }
 
-    private function appendCustomerRecords($results)
+    private function parseInitialResult($result)
     {
-        $filteredResults = $this->filterResults($results);
-
-        return $filteredResults->map(function($result) {
-            return $this->formatRawData($result);
-        });
-    }
-
-    public function formatRawData($result)
-    {
-        $nsid = $result->basic->internalId[0]->searchValue->internalId;
-        $data = [
-            'customer' => $result,
-            'records' => $this->getCustomerRecords($nsid)
+        return [
+            'nsid' => $result->basic->internalId[0]->searchValue->internalId,
+            "_Address" => str_replace(["\n","\r\n","\r"], " ", $result->basic->address[0]->searchValue),
+            "Business Email" => $result->basic->email ? $result->basic->email[0]->searchValue : '',
+            "SalesRepNSID" => $result->basic->salesRep[0]->searchValue->internalId
         ];
-
-        return $this->parseData($data);
     }
 
-    public function getCustomerRecords($nsid)
+    public static function getCustomerRecords($nsid)
     {
         try {
             $record = new Record();
@@ -153,22 +135,19 @@ class SavedSearch extends Service {
         return $response;
     }
 
-    private function parseData($data) : array
+    public static function getRecords($data) : array
     {
-        $customer = $data['customer'];
-        $basic = $data['customer']->basic;
-        $records = $data['records']->readResponse->record;
-        $salesRep = SalesRep::where('nsid', $basic->salesRep[0]->searchValue->internalId)->first();
+        $nsid = $data['nsid'];
+        $response = self::getCustomerRecords($nsid);
+        $records = $response->readResponse->record;
+        $salesRep = SalesRep::where('nsid', $data['SalesRepNSID'])->first();
         $type = optional($records->customFieldList->customField->get('Business Model'));
         $isPerson = $type ? ($type->first() == 'Individual' ? 1 : 0) : 0;
 
         return [
             "_Name" => $records->companyName,
-            "_Address" => str_replace(["\n","\r\n","\r"], " ", $basic->address[0]->searchValue),
             "_Phone" => preg_replace('/[^0-9]/', '', $records->phone),
-            "nsid" => $records->internalId,
             "_AccountOwner" => optional($salesRep)->email,
-            "Business Email" => $basic->email ? $basic->email[0]->searchValue : '',
             "Contact Name" => $records->contactRolesList->contactRoles[0]->contact->name,
             "Contact Email" => $records->contactRolesList->contactRoles[0]->email,
             'is Person' => $isPerson,
@@ -179,5 +158,4 @@ class SavedSearch extends Service {
             "lastModifiedDate" => $records->lastModifiedDate
         ];
     }
-
 }
