@@ -22,15 +22,22 @@ class Badger {
 
     private function setupClient()
     {
+        $this->ftpClient = self::getClient();
+    }
+
+    private static function getClient()
+    {
         $host = config('services.badger.host');
         $login = config('services.badger.login');
         $password = config('services.badger.password');
 
-        $this->ftpClient = new SFTP($host);
+        $ftpClient = new SFTP($host);
 
-        if (!$this->ftpClient->login($login, $password)) {
+        if (!$ftpClient->login($login, $password)) {
         	throw new Exception('Login failed');
         }
+
+        return $ftpClient;
     }
 
     public function export($data)

@@ -22,6 +22,8 @@ use App\Services\NetSuite\Customer\{
 };
 use App\Services\Badger\Badger as BadgerService;
 use Carbon\Carbon;
+use App\Jobs\{PushToBadger, SyncBadgerAccount};
+use Queue;
 
 /**
  * Class deletePostsCommand
@@ -32,6 +34,8 @@ use Carbon\Carbon;
 class SyncBadgerAccounts extends Command
 {
     const CUSTOMER_SAVED_SEARCH_ID = 'customsearch_badger_sync';
+    const BADGER_ACCOUNT_QUEUE = 'netsuite';
+    const BADGER_UPDATE_QUEUE = 'badger';
 
     private $savedSearch;
     private $bar;
@@ -72,14 +76,15 @@ class SyncBadgerAccounts extends Command
         $this->setFromDate();
 
         $this->runInitialSearch();
-        $this->info("Updating local data");
+        $this->info("Queuing local data update");
         $this->initProgressBar();
         $this->updateAccounts($this->response);
+        $this->addAllToQueue();
 
         $this->runSearches();
 
-        $this->info(PHP_EOL."Pushing to Badger Maps");
-        $this->pushToBadger();
+        $this->info(PHP_EOL."Queueing push to badger");
+        $this->queueBadgerPush();
     }
 
     private function runInitialSearch()
@@ -100,9 +105,16 @@ class SyncBadgerAccounts extends Command
                 $this->info("Retrying page {$page}/{$this->savedSearch->getTotalPages()}");
                 $this->response = $this->savedSearch->search($page);
             }
-            $this->updateAccounts($this->response);
+            $this->addAllToQueue();
         }
         $this->bar->finish();
+    }
+
+    private function addAllToQueue()
+    {
+        $this->response->map(function($item){
+            dispatch(new SyncBadgerAccount($item))->onQueue(self::BADGER_ACCOUNT_QUEUE);
+        });
     }
 
     private function initProgressBar()
@@ -125,12 +137,8 @@ class SyncBadgerAccounts extends Command
         });
     }
 
-    private function pushToBadger()
+    private function queueBadgerPush()
     {
-        try {
-            $this->badgerService->exportCustomers($this->fromDate);
-        } catch(\Exception $e) {
-            $this->error(PHP_EOL.$e->getMessage());
-        }
+        dispatch(new PushToBadger($this->fromDate))->onQueue(self::BADGER_UPDATE_QUEUE);
     }
 }
