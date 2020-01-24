@@ -23,9 +23,7 @@ use App\Services\NetSuite\SalesRep\SavedSearch as SalesRepSavedSearch;
 class SyncSalesReps extends Command
 {
     private $savedSearch;
-    private $bar;
     private $response;
-    private $totalPages;
 
     /**
      * The console command name.
@@ -54,18 +52,19 @@ class SyncSalesReps extends Command
      */
     public function handle()
     {
-        dd(\Carbon\Carbon::parse('')->toAtomString());
-        // try {
-        //     $salesReps = $this->savedSearch->search();
-        //     $this->updateAccounts($salesReps);
-        // } catch(\Exception $e) {
-        //     $this->error($e->getMessage());
-        // }
+        $this->info('Updating Sales Reps');
+        try {
+            $this->response = $this->savedSearch->search();
+            $this->updateAccounts();
+            $this->info('Update complete');
+        } catch(\Exception $e) {
+            $this->error($e->getMessage());
+        }
     }
 
-    private function updateAccounts($response)
+    private function updateAccounts()
     {
-        $response->map(function($account){
+        $this->response->map(function($account){
             try {
                 SalesRep::updateOrCreate(['nsid' => $account['nsid']], $account);
             } catch(\Exception $e) {

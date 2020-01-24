@@ -78,7 +78,7 @@ class SyncBadgerAccounts extends Command
 
         $this->runSearches();
 
-        $this->info("Pushing to Badger Maps");
+        $this->info(PHP_EOL."Pushing to Badger Maps");
         $this->pushToBadger();
     }
 
@@ -91,7 +91,7 @@ class SyncBadgerAccounts extends Command
     private function runSearches()
     {
         $this->bar->advance();
-        for($page=184;$page<=$this->totalPages;$page++) {
+        for($page=2;$page<=$this->totalPages;$page++) {
             $this->bar->setProgress($page);
             try {
                 $this->response = $this->savedSearch->search($page);

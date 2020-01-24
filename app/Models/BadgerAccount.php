@@ -70,11 +70,6 @@ class BadgerAccount extends Model {
         return trim($status[0]);
     }
 
-    public function updateFromNetsuite()
-    {
-
-    }
-
     public function formatForBadger()
     {
         if($this->getAttribute("is Person")) dd($this);
