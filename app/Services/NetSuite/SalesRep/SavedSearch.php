@@ -22,7 +22,7 @@ use NetSuite\Classes\{
 
 class SavedSearch extends Service {
 
-    const PER_PAGE = 1000;
+    const PER_PAGE = 200;
     const NETSUITE_SAVED_SEARCH_ID = 'customsearch_sellmark_salesrep_emps';
 
     private $request;

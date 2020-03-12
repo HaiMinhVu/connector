@@ -16,8 +16,8 @@ class CustEntity extends Model {
 
     public static function getDescById($id)
     {
-        return Cache::remember("cust-entity_{$id}", 3600, function () use ($id) {
+       // return Cache::remember("cust-entity_{$id}", 3600, function () use ($id) {
             return optional(self::where('ID', $id)->first())->Description;
-        });
+       // });
     }
 }

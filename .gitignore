@@ -6,3 +6,5 @@
 .env.backup
 .phpunit.result.cache
 *.sqbpro
+*.log
+

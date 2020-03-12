@@ -31,9 +31,9 @@ class Record extends Service {
         $this->request->baseRef->internalId = $customerNSID;
 		$this->request->baseRef->type = RecordType::customer;
 
-        return Cache::remember("customer_record_{$customerNSID}", self::CACHE_SECONDS, function(){
+       // return Cache::remember("customer_record_{$customerNSID}", self::CACHE_SECONDS, function(){
             return $this->service->get($this->request);
-        });
+       // });
     }
 
 }
