@@ -15,7 +15,8 @@ use NetSuite\Classes\{
     SearchDateField,
     SearchDateFieldOperator,
     SearchRequest,
-    SearchMoreWithIdRequest
+    SearchMoreWithIdRequest,
+    SearchBooleanField
 };
 
 class SavedSearch extends Service {
@@ -31,16 +32,25 @@ class SavedSearch extends Service {
     {
         parent::__construct();
         $this->setSavedSearchScriptId();
+        $this->setSearchCriteria();
     }
 
     public function setFromDate($dateString)
     {
         $fromDate = Carbon::parse($dateString)->toAtomString();
-        $this->search->criteria = new CustomerSearch();
-		$this->search->criteria->basic = new CustomerSearchBasic();
+
 		$this->search->criteria->basic->lastModifiedDate = new SearchDateField;
 		$this->search->criteria->basic->lastModifiedDate->operator = SearchDateFieldOperator::onOrAfter;
 		$this->search->criteria->basic->lastModifiedDate->searchValue = $fromDate;
+    }
+
+    private function setSearchCriteria()
+    {
+        $this->search->criteria = new CustomerSearch();
+		$this->search->criteria->basic = new CustomerSearchBasic();
+        $this->search->criteria->basic->isPerson = null;
+        $this->search->criteria->basic->isDefaultShipping = new SearchBooleanField;
+        $this->search->criteria->basic->isDefaultShipping->searchValue = true;
     }
 
     public function getTotalPages()

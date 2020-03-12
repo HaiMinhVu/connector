@@ -1,0 +1,67 @@
+<?php
+/**
+ *
+ * PHP version >= 7.0
+ *
+ * @category Console_Command
+ * @package  App\Console\Commands
+ */
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use App\Services\NetSuite\Inventory\Search as InventorySearch;
+use Illuminate\Support\Facades\Storage;
+use App\Jobs\PushNetsuiteProductsToAPI;
+use Queue;
+
+/**
+ * Class deletePostsCommand
+ *
+ * @category Console_Command
+ * @package  App\Console\Commands
+ */
+class SyncProducts extends Command
+{
+    const NETSUITE_PRODUCTS_QUEUE = 'netsuite_products';
+
+    protected $inventorySearch;
+
+    /**
+     * The console command name.
+     *
+     * @var string
+     */
+    protected $signature = "sync:products";
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = "Sync product data from NetSuite";
+
+    public function __construct(InventorySearch $inventorySearch)
+    {
+        parent::__construct();
+        $this->inventorySearch = $inventorySearch;
+    }
+
+    /**
+     * Execute the console command.
+     *
+     * @return mixed
+     */
+    public function handle()
+    {
+        $this->inventorySearch->search(function($records){
+            $json = json_encode($records);
+            dispatch(new PushNetsuiteProductsToAPI($json))->onQueue(self::NETSUITE_PRODUCTS_QUEUE);
+
+            // $storagePath = storage_path();
+            // $currentPage = $this->inventorySearch->getLastPage();
+            // file_put_contents("{$storagePath}/app/data_{$currentPage}.json", $json);
+            // $this->info("Page: {$currentPage}/{$this->inventorySearch->getTotalPages()}");
+        });
+    }
+}

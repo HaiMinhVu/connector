@@ -31,7 +31,7 @@ class PushToBadger extends Job
             $badgerService = new BadgerService;
             $badgerService->exportCustomers($this->fromDate);
         } catch(\Exception $e) {
-            dd($e->getMessage());
+            print_r($e->getMessage());
         }
     }
 }

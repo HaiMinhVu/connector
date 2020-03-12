@@ -26,5 +26,6 @@ class Service {
             "account" => config('services.netsuite.account'),
             "app_id" => config('services.netsuite.app_id')
         ]);
+	$this->service->addHeader('keep_alive', false);
     }
 }

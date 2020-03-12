@@ -14,7 +14,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\SyncBadgerAccounts::class,
-        Commands\SyncSalesReps::class
+        Commands\SyncSalesReps::class,
+        Commands\SyncProducts::class
     ];
 
     /**
