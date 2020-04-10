@@ -19,8 +19,8 @@ use App\Http\Resources\NetsuiteProduct;
 
 class Search extends Service {
 
-    const FROM_DATE = '2019-01-01';
-    const PER_PAGE = 100;
+    const FROM_DATE = '2015-01-01';
+    const PER_PAGE = 200;
     const CUSTOM_FIELD_MAP = [
         ['label' => 'eccn', 'id' => 1],
         ['label' => 'end_date', 'id' => 6],
@@ -60,11 +60,15 @@ class Search extends Service {
 
     private function runSearch()
     {
-        if($this->page > 1) {
-            return $this->paginatedSearch($this->request);
-        } else {
-            return $this->initialSearch($this->request);
-        }
+	   try {
+       	    if($this->page > 1) {
+                return $this->paginatedSearch($this->request);
+            } else {
+                return $this->initialSearch($this->request);
+            }
+	   } catch(\Exception $e) {
+	       $this->runSearch();
+	   }
     }
 
     private function getCacheId()
@@ -75,18 +79,14 @@ class Search extends Service {
 
     public function initialSearch()
     {
-        return Cache::remember($this->getCacheId(), self::CACHE_SECONDS, function() {
-            return $this->service->search($this->request);
-        });
+        return $this->service->search($this->request);
     }
 
     public function paginatedSearch() 
     {
         if($this->inLoop()) {
-            return Cache::remember($this->getCacheId(), self::CACHE_SECONDS, function() {
-                $this->setPaginatedRequest();
-                return $this->service->searchMoreWithId($this->request);
-            });
+            $this->setPaginatedRequest();
+            return $this->service->searchMoreWithId($this->request);
         }
     }
 
@@ -165,49 +165,6 @@ class Search extends Service {
 
     public function parseRecords($records)
     {
-        
-        // $record = (array)$records;
-
         return NetsuiteProduct::collection($records);
-
-        // return collect($record)->map(function($record){
-        //     // return $record;
-        //     return new NetsuiteProduct($record);
-        //     $data = [];
-        //     foreach($record as $key => $item) {
-        //         if($item !== null) {
-        //             if($key == 'customFieldList') {
-        //                 $item = collect($item->customField)->mapWithKeys(function($customField){
-        //                     $k = $this->getCustomFieldLabel($customField->internalId);
-        //                     $v = $customField->value;
-        //                     if($k == 'netsuite_category') {
-        //                         $v = $v->name;
-        //                     }
-        //                     return [$k => $v];
-        //                 })->filter(function($customField, $key){
-        //                     return $key != '';
-        //                 })->toArray();
-        //             }
-        //             if($item instanceof RecordRef) {
-        //                 $item = $item->name;
-        //             }
-        //             if($item instanceof \NetSuite\Classes\PricingMatrix) {
-        //                 $item = collect($item->pricing)->mapWithKeys(function($price){
-        //                     return [$price->priceLevel->name => $price->priceList->price[0]->value];
-        //                 })->toArray();
-        //             }
-        //             if($key == 'locationsList') {
-        //                 $data['quantityOnHand'] = $item->locations[3]->quantityOnHand;
-        //             }
-
-        //             $data[$key] = $item;
-        //         }
-        //     }
-        //     $data = array_merge($data, $data['customFieldList']);
-        //     foreach(['locationsList', 'memberList', 'customFieldList', 'siteCategoryList'] as $unsetKey) {
-        //         unset($data[$unsetKey]);
-        //     }
-        //     return $data;
-        // })->toArray();
     }
 }
