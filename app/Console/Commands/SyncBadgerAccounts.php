@@ -98,16 +98,21 @@ class SyncBadgerAccounts extends Command
         $this->bar->advance();
         for($page=2;$page<=$this->totalPages;$page++) {
             $this->bar->setProgress($page);
-            try {
-                $this->response = $this->savedSearch->search($page);
-            } catch(\Exception $e) {
-                $this->error(PHP_EOL.$e->getMessage());
-                $this->info("Retrying page {$page}/{$this->savedSearch->getTotalPages()}");
-                $this->response = $this->savedSearch->search($page);
-            }
+            $this->setResponse($page);
             $this->addAllToQueue();
         }
         $this->bar->finish();
+    }
+
+    private function setResponse($page)
+    {
+        try {
+            $this->response = $this->savedSearch->search($page);
+        } catch(\Exception $e) {
+            $this->error(PHP_EOL.$e->getMessage());
+            $this->info("Retrying page {$page}/{$this->savedSearch->getTotalPages()}");
+            $this->setResponse($page);
+        }
     }
 
     private function addAllToQueue()

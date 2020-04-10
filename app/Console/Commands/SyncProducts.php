@@ -54,14 +54,15 @@ class SyncProducts extends Command
      */
     public function handle()
     {
-        $this->inventorySearch->search(function($records){
-            $json = json_encode($records);
-            dispatch(new PushNetsuiteProductsToAPI($json))->onQueue(self::NETSUITE_PRODUCTS_QUEUE);
+        $client = new \GuzzleHttp\Client([
+            'base_uri' => config('services.sellmark.endpoint'),
+            'headers' => ['X-Api-Key' => config('services.sellmark.token')]
+        ]);
 
-            // $storagePath = storage_path();
-            // $currentPage = $this->inventorySearch->getLastPage();
-            // file_put_contents("{$storagePath}/app/data_{$currentPage}.json", $json);
-            // $this->info("Page: {$currentPage}/{$this->inventorySearch->getTotalPages()}");
+        $this->inventorySearch->search(function($records) use ($client) {
+            $res = $client->post('products/netsuite', ['json' => $records]);
+            $currentPage = $this->inventorySearch->getLastPage();
+            $this->info("Page: {$currentPage}/{$this->inventorySearch->getTotalPages()}");
         });
     }
 }
