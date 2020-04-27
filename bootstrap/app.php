@@ -27,7 +27,8 @@ $app->withEloquent();
 
 $app->configure('database');
 $app->configure('services');
-
+$app->configure('filesystems');
+$app->configure('mail');
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +49,13 @@ $app->singleton(
 $app->singleton(
     Illuminate\Contracts\Console\Kernel::class,
     App\Console\Kernel::class
+);
+
+$app->singleton(
+    Illuminate\Contracts\Filesystem\Factory::class,
+    function ($app) {
+        return new Illuminate\Filesystem\FilesystemManager($app);
+    }
 );
 
 /*
