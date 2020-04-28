@@ -20,7 +20,7 @@ use Carbon\Carbon;
 use Storage;
 
 /**
- * Class PushEmailData
+ * Class PushData
  *
  * @category Console_Command
  * @package  App\Console\Commands
@@ -43,7 +43,7 @@ class PushData extends Command
      *
      * @var string
      */
-    protected $signature = "push:netsuite-data {--disk= : Specify the remote storage disk}";
+    protected $signature = "push:data {--disk= : Specify the remote storage disk}";
 
     /**
      * The console command description.
