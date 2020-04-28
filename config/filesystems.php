@@ -64,6 +64,14 @@ return [
             'url' => env('AWS_URL'),
         ],
 
+        'remote_data' => [
+            'driver' => 'sftp',
+            'host' => env('REMOTE_DATA_HOST'),
+            'username' => env('REMOTE_DATA_USERNAME'),
+            'password' => env('REMOTE_DATA_PASSWORD'),
+            'root' => env('REMOTE_DATA_ROOT'),
+        ]
+
     ],
 
 ];
