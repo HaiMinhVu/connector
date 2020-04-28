@@ -16,6 +16,7 @@ use Ddeboer\Imap\SearchExpression;
 use Ddeboer\Imap\Search\Flag\Unseen;
 use Ddeboer\Imap\Message;
 use Ddeboer\Imap\Message\Attachment;
+use Carbon\Carbon;
 use Storage;
 
 /**
@@ -117,9 +118,16 @@ class PushData extends Command
     private function saveAttachment(?Attachment $attachment) : bool
     {
         if($attachment) {
-            return Storage::disk($this->remoteStorageDisk)->put($attachment->getFilename(), $attachment->getDecodedContent());
+            return Storage::disk($this->remoteStorageDisk)->put($this->generateFileName($attachment), $attachment->getDecodedContent());
         }
         return false;
+    }
+
+    private function generateFileName(Attachment $attachment) : string
+    {
+        $fileInfo = pathinfo($attachment->getFilename());
+        $dateString = Carbon::now()->format('Ymd');
+        return "{$fileInfo['filename']}_{$dateString}.{$fileInfo['extension']}";
     }
 
 }
