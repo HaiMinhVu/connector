@@ -16,11 +16,13 @@ use NetSuite\Classes\{
 use Closure;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\NetsuiteProduct;
+use Carbon\Carbon;
 
 class Search extends Service {
 
     const FROM_DATE = '2015-01-01';
     const PER_PAGE = 200;
+    const CACHE_TIMEOUT = 300;
     const CUSTOM_FIELD_MAP = [
         ['label' => 'eccn', 'id' => 1],
         ['label' => 'end_date', 'id' => 6],
@@ -47,28 +49,29 @@ class Search extends Service {
 
         do {
             $records = $this->searchAction();
-            $callback($records);
+            if($records) {
+                $callback($records);
+            }
         } while($this->inLoop());
     }
 
     protected function searchAction()
     {
-        $perPage = self::PER_PAGE;
-        $response = $this->runSearch();
-        return $this->handleResponse($response);
+        try {
+            $response = $this->runSearch();
+            return $this->handleResponse($response);
+        } catch(\Exception $e) {
+            $this->searchAction();
+        }
     }
 
     private function runSearch()
     {
-	   try {
-       	    if($this->page > 1) {
-                return $this->paginatedSearch($this->request);
-            } else {
-                return $this->initialSearch($this->request);
-            }
-	   } catch(\Exception $e) {
-	       $this->runSearch();
-	   }
+   	    if($this->page > 1) {
+            return $this->paginatedSearch($this->request);
+        } else {
+            return $this->initialSearch($this->request);
+        }
     }
 
     private function getCacheId()
@@ -79,14 +82,18 @@ class Search extends Service {
 
     public function initialSearch()
     {
-        return $this->service->search($this->request);
+        return Cache::remember($this->getCacheId(), self::CACHE_TIMEOUT, function(){
+            return $this->service->search($this->request);
+        });
     }
 
     public function paginatedSearch() 
     {
         if($this->inLoop()) {
             $this->setPaginatedRequest();
-            return $this->service->searchMoreWithId($this->request);
+            return Cache::remember($this->getCacheId(), self::CACHE_TIMEOUT, function(){
+                return $this->service->searchMoreWithId($this->request);
+            });
         }
     }
 
@@ -97,7 +104,8 @@ class Search extends Service {
             $this->totalPages = $searchResult->totalPages;
             $this->previousSearchId = $searchResult->searchId;
             $this->page = $searchResult->pageIndex+1;
-            return $this->parseRecords($searchResult->recordList->record);
+            $records = $this->parseRecords($searchResult->recordList->record);
+            return $records;
         } 
         return null;
     }

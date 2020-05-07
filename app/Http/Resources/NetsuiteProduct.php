@@ -67,6 +67,7 @@ class NetsuiteProduct extends JsonResource
     private function getCustomFieldLabel($id) 
     {
         $customField = collect(self::CUSTOM_FIELD_MAP)->firstWhere('id', $id);
+        if($id == 96) optional($customField)['label'];
         return optional($customField)['label'];
     }
 
