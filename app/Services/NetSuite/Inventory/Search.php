@@ -104,8 +104,7 @@ class Search extends Service {
             $this->totalPages = $searchResult->totalPages;
             $this->previousSearchId = $searchResult->searchId;
             $this->page = $searchResult->pageIndex+1;
-            $records = $this->parseRecords($searchResult->recordList->record);
-            return $records;
+            return $this->parseRecords($searchResult->recordList->record);
         } 
         return null;
     }
