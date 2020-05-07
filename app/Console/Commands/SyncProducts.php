@@ -61,7 +61,6 @@ class SyncProducts extends Command
 
         $this->inventorySearch->search(function($records) use ($client) {
             try {
-
                 $res = $client->post('products/netsuite', ['json' => $records]);
                 $currentPage = $this->inventorySearch->getLastPage();
                 $this->info("Page: {$currentPage}/{$this->inventorySearch->getTotalPages()}");

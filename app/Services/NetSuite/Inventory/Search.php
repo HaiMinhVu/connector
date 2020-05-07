@@ -16,7 +16,6 @@ use NetSuite\Classes\{
 use Closure;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\NetsuiteProduct;
-use Carbon\Carbon;
 
 class Search extends Service {
 
