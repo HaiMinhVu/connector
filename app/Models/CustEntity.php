@@ -8,7 +8,7 @@ class CustEntity extends Model {
 
     const CACHE_SECONDS = 3600;
 
-    protected $connection = 'custom_entity_fields';
+    // protected $connection = 'custom_entity_fields';
 
     protected $table = 'custom_entity_fields';
 
