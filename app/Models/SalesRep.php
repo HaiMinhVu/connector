@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class SalesRep extends Model {
     protected $primaryKey = 'nsid';
 
-    protected $connection = 'salesreps';
+    // protected $connection = 'salesreps';
 
     protected $table = 'salesreps';
 

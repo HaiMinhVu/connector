@@ -4,7 +4,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class LastCall extends Model {
-    protected $connection = 'nsconnector';
+    // protected $connection = 'nsconnector';
 
     protected $table = 'lastCall';
 
