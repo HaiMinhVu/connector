@@ -18,7 +18,6 @@ use NetSuite\Classes\{
     SearchMoreWithIdRequest,
     SearchBooleanField
 };
-use CACHE;
 
 class SavedSearch extends Service {
 
@@ -83,10 +82,7 @@ class SavedSearch extends Service {
     {
         if($page == 1) {
             $this->setInitialRequest();
-            // $response = $this->service->search($this->request);
-            $response = CACHE::remember('customer_saved_search_initial', 6000, function(){
-                return $this->service->search($this->request);
-            });
+            $response = $this->service->search($this->request);
         } else {
             $this->setPaginatedRequest($page);
             $response = $this->service->searchMoreWithId($this->request);
