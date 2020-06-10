@@ -106,10 +106,9 @@ class SavedSearch extends Service {
         return $results->filter(function($item){
             $hasAddress = !!$item->basic->address;
             $hasSalesRep = !!$item->basic->salesRep;
-            $hasContact = !!$item->basic->contact;
             $isDefaultShippingAddress = $item->basic->isDefaultShipping[0]->searchValue;
 
-            return $hasAddress && $hasSalesRep && $hasContact && $isDefaultShippingAddress;
+            return $hasAddress && $hasSalesRep && $isDefaultShippingAddress;
         });
     }
 
