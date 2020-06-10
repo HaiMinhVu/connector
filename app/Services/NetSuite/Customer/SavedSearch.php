@@ -18,6 +18,7 @@ use NetSuite\Classes\{
     SearchMoreWithIdRequest,
     SearchBooleanField
 };
+use CACHE;
 
 class SavedSearch extends Service {
 
@@ -82,7 +83,10 @@ class SavedSearch extends Service {
     {
         if($page == 1) {
             $this->setInitialRequest();
-            $response = $this->service->search($this->request);
+            // $response = $this->service->search($this->request);
+            $response = CACHE::remember('customer_saved_search_initial', 6000, function(){
+                return $this->service->search($this->request);
+            });
         } else {
             $this->setPaginatedRequest($page);
             $response = $this->service->searchMoreWithId($this->request);
@@ -145,6 +149,18 @@ class SavedSearch extends Service {
         return $response;
     }
 
+    private static function getContact(?object $contactRoleList) : ?object
+    {
+        if($contactRoleList) {
+          $firstContact = $contactRoleList->contactRoles[0];
+          return (object)[
+            'name' => $firstContact->contact->name,
+            'email' => $firstContact->email
+          ];
+        }
+        return null;
+    }
+
     public static function getRecords($data) : array
     {
         $nsid = $data['nsid'];
@@ -153,13 +169,14 @@ class SavedSearch extends Service {
         $salesRep = SalesRep::where('nsid', $data['SalesRepNSID'])->first();
         $type = optional($records->customFieldList->customField->get('Business Model'));
         $isPerson = $type ? ($type->first() == 'Individual' ? 1 : 0) : 0;
+        $contact = optional(self::getContact($records->contactRolesList));
 
         return [
             "_Name" => $records->companyName,
             "_Phone" => preg_replace('/[^0-9]/', '', $records->phone),
             "_AccountOwner" => optional($salesRep)->email,
-            "Contact Name" => $records->contactRolesList->contactRoles[0]->contact->name,
-            "Contact Email" => $records->contactRolesList->contactRoles[0]->email,
+            "Contact Name" => $contact->name ?? '',
+            "Contact Email" => $contact->email ?? '',
             'is Person' => $isPerson,
             "Status" => $records->entityStatus->name,
             "url" => $records->url,
