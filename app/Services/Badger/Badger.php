@@ -81,7 +81,7 @@ class Badger {
             $file = File::get($this->localFile());
             $this->ftpClient->put($this->remoteFile(), $file);
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            // dd($e->getMessage());
         }
     }
 

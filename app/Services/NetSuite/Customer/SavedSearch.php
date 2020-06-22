@@ -124,7 +124,7 @@ class SavedSearch extends Service {
             $record = new Record();
             $response = $record->getByNSID($nsid);
         } catch(\Exception $e) {
-            dd($e->getMessage());
+            // dd($e->getMessage());
         }
 
         $response->readResponse->record->customFieldList->customField = collect($response->readResponse->record->customFieldList->customField)->mapWithKeys(function($field){

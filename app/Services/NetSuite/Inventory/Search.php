@@ -86,7 +86,7 @@ class Search extends Service {
         });
     }
 
-    public function paginatedSearch() 
+    public function paginatedSearch()
     {
         if($this->inLoop()) {
             $this->setPaginatedRequest();
@@ -104,7 +104,7 @@ class Search extends Service {
             $this->previousSearchId = $searchResult->searchId;
             $this->page = $searchResult->pageIndex+1;
             return $this->parseRecords($searchResult->recordList->record);
-        } 
+        }
         return null;
     }
 
@@ -114,7 +114,7 @@ class Search extends Service {
         $this->initRequest();
     }
 
-    protected function setParameters() 
+    protected function setParameters()
     {
         $searchBooleanField = new SearchBooleanField();
         $searchBooleanField->searchValue = true;
@@ -155,7 +155,7 @@ class Search extends Service {
         return $this->page-1;
     }
 
-    public function inLoop() 
+    public function inLoop()
     {
         if($this->totalPages != null) {
             return $this->page <= $this->totalPages;
@@ -163,7 +163,7 @@ class Search extends Service {
         return true;
     }
 
-    private function getCustomFieldLabel($id) 
+    private function getCustomFieldLabel($id)
     {
         $customField = collect(self::CUSTOM_FIELD_MAP)->firstWhere('id', $id);
         return optional($customField)['label'];
