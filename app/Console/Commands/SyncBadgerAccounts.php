@@ -109,7 +109,7 @@ class SyncBadgerAccounts extends Command
         try {
             $this->response = $this->savedSearch->search($page);
         } catch(\Exception $e) {
-            $this->error(PHP_EOL.$e->getMessage());
+            // $this->error(PHP_EOL.$e->getMessage());
             $this->info("Retrying page {$page}/{$this->savedSearch->getTotalPages()}");
             $this->setResponse($page);
         }
