@@ -53,12 +53,18 @@ class SyncSalesReps extends Command
     public function handle()
     {
         $this->info('Updating Sales Reps');
+        $this->handleAction();
+    }
+
+    private function handleAction()
+    {
         try {
             $this->response = $this->savedSearch->search();
             $this->updateAccounts();
             $this->info('Update complete');
         } catch(\Exception $e) {
             // $this->error($e->getMessage());
+            $this->handleAction();
         }
     }
 
