@@ -89,8 +89,13 @@ class SyncBadgerAccounts extends Command
 
     private function runInitialSearch()
     {
-        $this->response = $this->savedSearch->search();
-        $this->totalPages = $this->savedSearch->getTotalPages();
+        try {
+            $this->response = $this->savedSearch->search();
+            $this->totalPages = $this->savedSearch->getTotalPages();
+        } catch(\Exception $e) {
+            $this->info("Retrying initial search");
+            $this->runInitialSearch();
+        }
     }
 
     private function runSearches()
