@@ -64,7 +64,9 @@ class GetBadgerData extends Job
 
     private function addAllToQueue()
     {
-        dispatch(new self($this->fromDate, $this->page++))->onQueue(self::BADGER_INITIAL_QUEUE);
+        if($this->page < $this->totalPages) {
+            dispatch(new self($this->fromDate, $this->page++))->onQueue(self::BADGER_INITIAL_QUEUE);
+        }
 
         $this->response->map(function($item){
             dispatch(new SyncBadgerAccount($item))->onQueue(self::BADGER_ACCOUNT_QUEUE);

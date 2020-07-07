@@ -27,17 +27,13 @@ class SyncBadgerAccount extends Job
      */
     public function handle()
     {
-        try {
-            $records = CustomerSavedSearch::getRecords($this->data);
-            $data = array_merge(['_Address' => $this->data['_Address'], 'Business Email' => $this->data['Business Email']], $records);
-            $badgerAccount = BadgerAccount::updateOrCreate(
-                ['nsid' => $this->data['nsid']],
-                $data
-            );
-            $badgerAccount->fill($records);
-            $badgerAccount->save();
-        } catch(\Exception $e) {
-            dd($e->getMessage());
-        }
+        $records = CustomerSavedSearch::getRecords($this->data);
+        $data = array_merge(['_Address' => $this->data['_Address'], 'Business Email' => $this->data['Business Email']], $records);
+        $badgerAccount = BadgerAccount::updateOrCreate(
+            ['nsid' => $this->data['nsid']],
+            $data
+        );
+        $badgerAccount->fill($records);
+        $badgerAccount->save();
     }
 }

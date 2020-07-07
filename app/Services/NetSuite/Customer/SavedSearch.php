@@ -119,13 +119,8 @@ class SavedSearch extends Service {
 
     public static function getCustomerRecords($nsid)
     {
-        try {
-            $record = new Record();
-            $response = $record->getByNSID($nsid);
-        } catch(\Exception $e) {
-            // dd($e->getMessage());
-        }
-
+        $record = new Record();
+        $response = $record->getByNSID($nsid);
         $response->readResponse->record->customFieldList->customField = collect($response->readResponse->record->customFieldList->customField)->mapWithKeys(function($field){
             $key = CustEntity::getDescById($field->scriptId);
             $value = $field->value;
