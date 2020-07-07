@@ -60,6 +60,7 @@ class SyncProducts extends Command
         ]);
 
         $this->inventorySearch->search(function($records) use ($client) {
+            dd($records);
             try {
                 $res = $client->post('products/netsuite', ['json' => $records]);
                 $currentPage = $this->inventorySearch->getLastPage();

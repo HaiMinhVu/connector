@@ -11,22 +11,12 @@ namespace App\Console\Commands;
 
 use Exception;
 use Illuminate\Console\Command;
-use App\Models\{
-    BadgerAccount,
-    CustEntity,
-    SalesRep
-};
-use App\Services\NetSuite\Customer\{
-    SavedSearch as CustomerSavedSearch,
-    Record as NSCustomerRecord
-};
-use App\Services\Badger\Badger as BadgerService;
 use Carbon\Carbon;
-use App\Jobs\{PushToBadger, SyncBadgerAccount};
+use App\Jobs\GetBadgerData;
 use Queue;
 
 /**
- * Class deletePostsCommand
+ * Class SyncBadgerAccounts
  *
  * @category Console_Command
  * @package  App\Console\Commands
@@ -37,12 +27,7 @@ class SyncBadgerAccounts extends Command
     const BADGER_ACCOUNT_QUEUE = 'netsuite';
     const BADGER_UPDATE_QUEUE = 'badger';
 
-    private $savedSearch;
-    private $bar;
-    private $response;
-    private $totalPages;
     private $fromDate;
-    private $badgerService;
 
     /**
      * The console command name.
@@ -58,13 +43,6 @@ class SyncBadgerAccounts extends Command
      */
     protected $description = "Sync badger data";
 
-    public function __construct(BadgerService $badgerService, CustomerSavedSearch $savedSearch)
-    {
-        parent::__construct();
-        $this->badgerService = $badgerService;
-        $this->savedSearch = $savedSearch;
-    }
-
     /**
      * Execute the console command.
      *
@@ -72,65 +50,8 @@ class SyncBadgerAccounts extends Command
      */
     public function handle()
     {
-        $this->info("Retrieving data from NetSuite");
         $this->setFromDate();
-
-        $this->runInitialSearch();
-        $this->info("Queuing local data update");
-        $this->initProgressBar();
-        $this->updateAccounts($this->response);
-        $this->addAllToQueue();
-
-        $this->runSearches();
-
-        $this->info(PHP_EOL."Queueing push to badger");
-        $this->queueBadgerPush();
-    }
-
-    private function runInitialSearch()
-    {
-        try {
-            $this->response = $this->savedSearch->search();
-            $this->totalPages = $this->savedSearch->getTotalPages();
-        } catch(\Exception $e) {
-            $this->info("Retrying initial search");
-            $this->runInitialSearch();
-        }
-    }
-
-    private function runSearches()
-    {
-        $this->bar->advance();
-        for($page=2;$page<=$this->totalPages;$page++) {
-            $this->bar->setProgress($page);
-            $this->setResponse($page);
-            $this->addAllToQueue();
-        }
-        $this->bar->finish();
-    }
-
-    private function setResponse($page)
-    {
-        try {
-            $this->response = $this->savedSearch->search($page);
-        } catch(\Exception $e) {
-            // $this->error(PHP_EOL.$e->getMessage());
-            $this->info("Retrying page {$page}/{$this->savedSearch->getTotalPages()}");
-            $this->setResponse($page);
-        }
-    }
-
-    private function addAllToQueue()
-    {
-        $this->response->map(function($item){
-            dispatch(new SyncBadgerAccount($item))->onQueue(self::BADGER_ACCOUNT_QUEUE);
-        });
-    }
-
-    private function initProgressBar()
-    {
-        $this->bar = $this->output->createProgressBar($this->totalPages);
-        $this->bar->start();
+        dispatch(new GetBadgerData($this->fromDate))->onQueue(GetBadgerData::BADGER_INITIAL_QUEUE);
     }
 
     private function setFromDate()
@@ -138,17 +59,5 @@ class SyncBadgerAccounts extends Command
         $fromDate = ($this->option('from-date') === null) ? Carbon::now()->subDay() : $this->option('from-date');
         $this->fromDate = Carbon::parse($fromDate)->startOfDay();
         $this->savedSearch->setFromDate($fromDate);
-    }
-
-    private function updateAccounts($response)
-    {
-        $response->map(function($account){
-            BadgerAccount::updateOrCreate(['nsid' => $account['nsid']], $account);
-        });
-    }
-
-    private function queueBadgerPush()
-    {
-        dispatch(new PushToBadger($this->fromDate))->onQueue(self::BADGER_UPDATE_QUEUE);
     }
 }

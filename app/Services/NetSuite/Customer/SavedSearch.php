@@ -21,7 +21,7 @@ use NetSuite\Classes\{
 
 class SavedSearch extends Service {
 
-    const PER_PAGE = 1000;
+    const PER_PAGE = 100;
     const NETSUITE_SAVED_SEARCH_ID = 'customsearch_badger_sync';
 
     private $request;
@@ -78,8 +78,7 @@ class SavedSearch extends Service {
         $this->request->pageIndex = $page;
     }
 
-    public function search($page = 1)
-    {
+    public function search($page) {
         if($page == 1) {
             $this->setInitialRequest();
             $response = $this->service->search($this->request);
