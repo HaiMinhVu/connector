@@ -21,7 +21,7 @@ use NetSuite\Classes\{
 
 class SavedSearch extends Service {
 
-    const PER_PAGE = 100;
+    const PER_PAGE = 1000;
     const NETSUITE_SAVED_SEARCH_ID = 'customsearch_badger_sync';
 
     private $request;
