@@ -19,7 +19,7 @@ use App\Http\Resources\NetsuiteProduct;
 
 class Search extends Service {
 
-    const FROM_DATE = '2015-01-01';
+    const FROM_DATE = '2011-01-01';
     const PER_PAGE = 200;
     const CACHE_TIMEOUT = 300;
     const CUSTOM_FIELD_MAP = [
