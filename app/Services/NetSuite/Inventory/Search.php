@@ -19,7 +19,6 @@ use App\Http\Resources\NetsuiteProduct;
 
 class Search extends Service {
 
-    const FROM_DATE = '2011-01-01';
     const PER_PAGE = 200;
     const CACHE_TIMEOUT = 300;
     const CUSTOM_FIELD_MAP = [
@@ -37,21 +36,33 @@ class Search extends Service {
     protected $request;
     protected $response;
     protected $page = 1;
+    protected $fromDate;
 
-    public function __construct()
+    public function __construct(string $fromDate = null)
     {
         parent::__construct();
-        $this->init();
+        if($fromDate) {
+            $this->setFromDate($fromDate);
+        }
     }
 
     public function search(Closure $callback) {
-
+        if(!$this->fromDate) {
+            $this->setFromDate();
+        }
         do {
             $records = $this->searchAction();
             if($records) {
                 $callback($records);
             }
         } while($this->inLoop());
+    }
+
+    public function setFromDate($dateString = null)
+    {
+        $this->fromDate = ($dateString) ? (new \DateTime($dateString))->format('c') : (new \DateTime())->sub(new \DateInterval('P1D'))->format('c');
+        $this->setParameters();
+        $this->init();
     }
 
     protected function searchAction()
@@ -73,7 +84,7 @@ class Search extends Service {
         }
     }
 
-    private function getCacheId()
+    public function getCacheId()
     {
         $perPage = self::PER_PAGE;
         return "inventory_search_{$perPage}_{$this->page}";
@@ -81,18 +92,18 @@ class Search extends Service {
 
     public function initialSearch()
     {
-        return Cache::remember($this->getCacheId(), self::CACHE_TIMEOUT, function(){
+        // return Cache::remember($this->getCacheId(), self::CACHE_TIMEOUT, function(){
             return $this->service->search($this->request);
-        });
+        // });
     }
 
     public function paginatedSearch()
     {
         if($this->inLoop()) {
             $this->setPaginatedRequest();
-            return Cache::remember($this->getCacheId(), self::CACHE_TIMEOUT, function(){
+            // return Cache::remember($this->getCacheId(), self::CACHE_TIMEOUT, function(){
                 return $this->service->searchMoreWithId($this->request);
-            });
+            // });
         }
     }
 
@@ -119,11 +130,11 @@ class Search extends Service {
         $searchBooleanField = new SearchBooleanField();
         $searchBooleanField->searchValue = true;
         $searchDateField = new SearchDateField();
-        $searchDateField->searchValue = (new \DateTime(self::FROM_DATE))->getTimestamp();
+        $searchDateField->searchValue = $this->fromDate;
         $searchDateField->operator = SearchDateFieldOperator::onOrAfter;
         $this->search = new ItemSearchBasic;
         $this->search->isAvailable = $searchBooleanField;
-        $this->search->created = $searchDateField;
+        $this->search->lastModifiedDate = $searchDateField;
         $this->service->setSearchPreferences(false, self::PER_PAGE);
     }
 
