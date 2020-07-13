@@ -37,7 +37,7 @@ class NetsuiteProduct extends JsonResource
         foreach($this->resource as $key => $item) {
             if($item !== null) {
                 $this->key = $key;
-        		$this->item = $item;    
+        		$this->item = $item;
                 $this->parse();
                 $this->data[$key] = $this->item;
             }
@@ -64,7 +64,7 @@ class NetsuiteProduct extends JsonResource
         }
     }
 
-    private function getCustomFieldLabel($id) 
+    private function getCustomFieldLabel($id)
     {
         $customField = collect(self::CUSTOM_FIELD_MAP)->firstWhere('id', $id);
         return optional($customField)['label'];
@@ -117,7 +117,7 @@ class NetsuiteProduct extends JsonResource
     	if($this->key == 'locationsList') {
     		$warehouse = collect($this->item->locations)->firstWhere('location', 'Warehouse');
 			if($warehouse instanceof InventoryItemLocations) {
-	            $this->data['quantityOnHand'] = $warehouse->quantityOnHand;
+	            $this->data['quantityOnHand'] = $warehouse->quantityAvailable;
 	            $this->data['quantityBackOrdered'] = $warehouse->quantityBackOrdered;
 	        }
         }
