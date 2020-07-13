@@ -71,7 +71,7 @@ class Search extends Service {
             $response = $this->runSearch();
             return $this->handleResponse($response);
         } catch(\Exception $e) {
-            // dd($e->getMessage());
+            print_r($e->getMessage());
             $this->searchAction();
         }
     }

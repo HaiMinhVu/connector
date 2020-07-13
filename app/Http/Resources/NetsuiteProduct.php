@@ -117,8 +117,8 @@ class NetsuiteProduct extends JsonResource
     	if($this->key == 'locationsList') {
     		$warehouse = collect($this->item->locations)->firstWhere('location', 'Warehouse');
 			if($warehouse instanceof InventoryItemLocations) {
-	            $this->data['quantityOnHand'] = $warehouse->quantityAvailable;
-	            $this->data['quantityBackOrdered'] = $warehouse->quantityBackOrdered;
+	            $this->data['quantityAvailable'] = (int) $warehouse->quantityAvailable;
+	            $this->data['quantityBackOrdered'] = (int) $warehouse->quantityBackOrdered;
 	        }
         }
     }
