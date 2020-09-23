@@ -11,7 +11,7 @@ class BadgerAccount extends Model {
 
     protected $primaryKey = 'nsid';
 
-    // protected $connection = 'badgeraccounts';
+    // protected $connection = 'badgeraccounts'; // comment this line when using aws rds
 
     protected $table = 'badgeraccounts';
 
