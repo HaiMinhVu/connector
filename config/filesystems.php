@@ -70,7 +70,7 @@ return [
             'username' => env('REMOTE_DATA_USERNAME'),
             'password' => env('REMOTE_DATA_PASSWORD'),
             'root' => env('REMOTE_DATA_ROOT'),
-        ]
+        ],
 
     ],
 
