@@ -11,6 +11,9 @@ use NetSuite\Classes\{
 	CalendarEventAccessLevel,
     RecordRef,
     AddListRequest,
+    Message,
+    PhoneCall,
+    PhoneCallStatus
 };
 use App\Models\{
 	SalesRep,
@@ -75,8 +78,12 @@ class SyncCheckin2NS extends Command
     	else if($data->type == 'Letter'){
     		$this->processLetter($data);
     	}
+    	else if($data->type == 'Meeting'){
+    		$this->processLetter($data);
+    	}
     	else{
-    		$this->processMeeting($data);
+    		echo "Missing Type";
+    		return;
     	}
     }
 
@@ -92,7 +99,6 @@ class SyncCheckin2NS extends Command
 
     public function processMeeting($data){
     	$meeting = new CalendarEvent();
-
     	$meeting->company = $this->createRecordRef($data->customer_id);
 		$meeting->organizer = $this->createRecordRef($data->rep_id);
 		$meeting->attendeeList = array(
@@ -110,20 +116,54 @@ class SyncCheckin2NS extends Command
 		$meeting->allDayEvent = false;
 		$meeting->sendEmail = false;
         $meeting->customform = -110;
-
     	$this->pushCheckin($this->addListRequest($meeting));
     }
 
-    public function processEmail($data){
-
+    public function processPhoneCall($data){
+    	$phonecall = new PhoneCall();
+    	$phonecall->company = $this->createRecordRef($data->customer_id);
+    	$phonecall->owner = $this->createRecordRef($data->rep_id);
+    	$phonecall->assigned = $this->createRecordRef($data->rep_id);
+    	$phonecall->title="[Badger] Call ".$data->account_name;
+    	$phonecall->message = $data->note.PHP_EOL.'Estimate #: '.$data->estimate_number. PHP_EOL.'Estimate Total: '.$data->estimate_total.PHP_EOL.'PO #: '.$data->po_number.PHP_EOL.'PO Total: '.$data->po_total;
+    	$phonecall->status = PhoneCallStatus::_completed;
+    	$phonecall->sendEmail = false;
+    	$phonecall->starttime = $phonecall->endtime = $data->time;
+		$phonecall->startDate = date_format(date_create($data->date),DATE_ATOM);
+		$phonecall->messageDate = date_format(date_create($data->date),DATE_ATOM);
+		$this->pushCheckin($this->addListRequest($phonecall));
     }
 
-    public function processPhoneCall($data){
-    	echo "phone call";
+    public function processEmail($data){
+    	$email = new Message();
+    	$email->company = $this->createRecordRef($data->customer_id);
+		$email->author = $this->createRecordRef($data->customer_id);
+		$email->recipient = $this->createRecordRef($data->rep_id);
+		$email->subject = "[Badger] Email From ".$data->account_name;
+		$email->message = $data->note.PHP_EOL.'Estimate #: '.$data->estimate_number. PHP_EOL.'Estimate Total: '.$data->estimate_total.PHP_EOL.'PO #: '.$data->po_number.PHP_EOL.'PO Total: '.$data->po_total;
+		$email->emailed = true;
+		$email->messageDateSpecified = true; 
+		$email->allDayEvent = false;
+		$email->starttime = $email->endtime = $data->time;
+		$email->startDate = date_format(date_create($data->date),DATE_ATOM);
+		$email->messageDate = date_format(date_create($data->date),DATE_ATOM);
+    	$this->pushCheckin($this->addListRequest($email));
     }
 
     public function processLetter($data){
-    	
+    	$letter = new Message();
+    	$letter->company = $this->createRecordRef($data->customer_id);
+		$letter->author = $this->createRecordRef($data->customer_id);
+		$letter->recipient = $this->createRecordRef($data->rep_id);
+		$letter->subject = "[Badger] Letter From ".$data->account_name;
+		$letter->message = $data->note.PHP_EOL.'Estimate #: '.$data->estimate_number. PHP_EOL.'Estimate Total: '.$data->estimate_total.PHP_EOL.'PO #: '.$data->po_number.PHP_EOL.'PO Total: '.$data->po_total;
+		$letter->emailed = true;
+		$letter->messageDateSpecified = true; 
+		$letter->allDayEvent = false;
+		$letter->starttime = $letter->endtime = $data->time;
+		$letter->startDate = date_format(date_create($data->date),DATE_ATOM);
+		$letter->messageDate = date_format(date_create($data->date),DATE_ATOM);
+    	$this->pushCheckin($this->addListRequest($letter));
     }
 
     public function createRecordRef($internalId){
@@ -141,10 +181,10 @@ class SyncCheckin2NS extends Command
     public function pushCheckin($request){
     	$addResponse = $this->service->addList($request);
 		if ($addResponse->writeResponseList->status->isSuccess ==  true) {
-		    echo "Success";
+			echo "Success ";
 		    $this->updateCheckin($this->id);
 		} else {
-		    echo "Error";
+		    echo "Error ".$addResponse->writeResponseList->status->statusDetail;
 		}
     }
 
