@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Storage;
+use ZipArchive;
 use App\Models\{
     Checkin,    
 };
@@ -48,21 +49,32 @@ class InsertCheckins extends Command
                 $firstline = FALSE;
                 continue;
             }
-            
-            if($this->createCheckin($row) == 0){
+            if($this->createCheckin($row) == false){
                 $processedAll = 0;
             }
         }
         if($processedAll){
-            $this->deleteFile($filename);
+            $this->saveProcessedFile($filename);
         }
+    }
+
+    public function saveProcessedFile($filename){
+        $zipFileName = 'savedCheckins.zip';
+        $zip = new ZipArchive;
+        if ($zip->open('storage/app/public/'.$zipFileName, ZipArchive::CREATE) === TRUE) {
+            if($zip->addFile('storage/app/'.$filename, $filename)){
+                $zip->close();
+                $this->deleteFile($filename);
+            }            
+        }
+
     }
 
     public function deleteFile($filename){
         Storage::disk('local')->delete($filename);
     }
 
-    public function createCheckin($data){
+    public function createCheckin($data) : bool{
         $checkin = new Checkin;
         $checkin->rep_email = $data[1];
         $checkin->account_name = $data[2];
@@ -78,11 +90,8 @@ class InsertCheckins extends Command
         $checkin->po_number = $data[13];
         $checkin->po_total = $data[14];
         $checkin->note = json_encode($data[15]);
-        if($checkin->save()){
-            return 1;
-        }
-        else{
-            return 0;
+        if(!$checkin->save()){
+            return false;
         }
     }
 
