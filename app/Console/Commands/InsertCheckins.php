@@ -42,6 +42,7 @@ class InsertCheckins extends Command
 
     public function processFile($filename){
         $file = fopen('storage/app/'.$filename, 'r');
+        $this->saveProcessedFile($filename);
         $processedAll = 1;
         $firstline = TRUE;
         while (($row = fgetcsv($file)) !== FALSE) {
@@ -49,12 +50,12 @@ class InsertCheckins extends Command
                 $firstline = FALSE;
                 continue;
             }
-            if($this->createCheckin($row) == false){
+            if($this->createCheckin($row) == 0){
                 $processedAll = 0;
             }
         }
         if($processedAll){
-            $this->saveProcessedFile($filename);
+            $this->deleteFile($filename);
         }
     }
 
@@ -62,19 +63,16 @@ class InsertCheckins extends Command
         $zipFileName = 'savedCheckins.zip';
         $zip = new ZipArchive;
         if ($zip->open('storage/app/public/'.$zipFileName, ZipArchive::CREATE) === TRUE) {
-            if($zip->addFile('storage/app/'.$filename, $filename)){
-                $zip->close();
-                $this->deleteFile($filename);
-            }            
+            $zip->addFile('storage/app/'.$filename, $filename);
         }
-
+        $zip->close();
     }
 
     public function deleteFile($filename){
         Storage::disk('local')->delete($filename);
     }
 
-    public function createCheckin($data) : bool{
+    public function createCheckin($data){
         $checkin = new Checkin;
         $checkin->rep_email = $data[1];
         $checkin->account_name = $data[2];
@@ -91,7 +89,7 @@ class InsertCheckins extends Command
         $checkin->po_total = $data[14];
         $checkin->note = json_encode($data[15]);
         if(!$checkin->save()){
-            return false;
+            return 0;
         }
     }
 
