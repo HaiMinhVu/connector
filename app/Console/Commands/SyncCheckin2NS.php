@@ -27,7 +27,7 @@ class SyncCheckin2NS extends Command
  	protected $pendingCheckins;
  	private $id;
 
-    protected $signature = 'sync:checkins';
+    protected $signature = 'checkins:sync';
     protected $description = 'push check-ins to netsuite';
 
     public function __construct()
