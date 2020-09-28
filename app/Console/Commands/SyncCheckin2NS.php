@@ -63,10 +63,11 @@ class SyncCheckin2NS extends Command
     }
 
     public function readCheckin(){
-    	return Checkin::where('is_processed', 0)->get();
+    	return Checkin::where('is_processed', 0)->orderBy('id')->get();
     }    
 
     public function processCheckin($data){
+        echo $data->id;
     	$this->id = $data->id;
     	$data->rep_id = $this->getRepID($data->rep_email);
     	if($data->type == 'PhoneCall'){
@@ -79,7 +80,7 @@ class SyncCheckin2NS extends Command
     		$this->processLetter($data);
     	}
     	else if($data->type == 'Meeting'){
-    		$this->processLetter($data);
+    		$this->processMeeting($data);
     	}
     	else{
     		echo "Missing Type";
