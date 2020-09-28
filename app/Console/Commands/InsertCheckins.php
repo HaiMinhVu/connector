@@ -12,7 +12,7 @@ use App\Models\{
 class InsertCheckins extends Command
 {
     
-    protected $signature = 'insert:checkins';
+    protected $signature = 'checkins:insert';
     protected $description = 'insert check-ins from local to database';
 
     public function __construct()

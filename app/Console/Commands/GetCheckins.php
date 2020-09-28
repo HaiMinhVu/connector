@@ -13,7 +13,7 @@ class GetCheckins extends Command
 {
     const REMOTE_CHECKINS_PATH = "dropbox/outgoing/checkins/";
 
-    protected $signature = 'get:checkins';
+    protected $signature = 'checkins:download';
     protected $description = 'download check-ins from badger to local';
 
     public function __construct()
