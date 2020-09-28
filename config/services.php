@@ -21,6 +21,6 @@ return [
     'sellmark' => [
         'endpoint' => env('SLMK_API_ENDPOINT'),
         'token' => env('SLMK_API_TOKEN')
-    ]
+    ],
 
 ];

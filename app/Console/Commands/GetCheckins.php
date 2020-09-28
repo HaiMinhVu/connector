@@ -52,7 +52,7 @@ class GetCheckins extends Command
     public function downloadFromRemote($connection, $filename){
         try{
             if(Storage::disk('local')->put($filename, $connection->get(self::REMOTE_CHECKINS_PATH.$filename))){
-                $this->deleteOnRemote($connection, $filename);
+                // $this->deleteOnRemote($connection, $filename);
             }
         } catch(\Exception $e) {
             return $e->getMessage();
