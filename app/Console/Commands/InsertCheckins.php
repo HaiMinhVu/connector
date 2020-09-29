@@ -57,6 +57,7 @@ class InsertCheckins extends Command
             }
         }
         if($processedAll){
+            echo "Inserted all".PHP_EOL;
             $this->deleteFile($filename);
         }
     }
@@ -65,6 +66,7 @@ class InsertCheckins extends Command
         $file = Storage::disk('local')->get($filename);
         $newfilename = date("mdY").'_'.$filename;
         if(Storage::disk('s3')->put('badger/'.$newfilename, $file)){
+            echo "Saved ".$filename." to S3";
             return 1;
         }
         else{
@@ -83,6 +85,7 @@ class InsertCheckins extends Command
 
     public function deleteFile($filename){
         Storage::disk('local')->delete($filename);
+        echo "Deleted: ".$filename.PHP_EOL;
     }
 
     public function createCheckin($data){
