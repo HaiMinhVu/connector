@@ -35,7 +35,7 @@ class GetCheckins extends Command
         try{
             $connection->login($login, $password);
         }catch(\Exception $e) {
-            return $e->getMessage();
+            echo $e->getMessage();
         }
         return $connection;
     }
@@ -44,6 +44,7 @@ class GetCheckins extends Command
         $files = $connection->nlist(self::REMOTE_CHECKINS_PATH);
         foreach ($files as $filename) {
             if(strpos($filename,'.csv')){
+                echo "Downloading: ".$filename.PHP_EOL;
                 $this->downloadFromRemote($connection, $filename);
             }
         }
@@ -52,7 +53,8 @@ class GetCheckins extends Command
     public function downloadFromRemote($connection, $filename){
         try{
             if(Storage::disk('local')->put($filename, $connection->get(self::REMOTE_CHECKINS_PATH.$filename))){
-                // $this->deleteOnRemote($connection, $filename);
+                echo "Downloaded: ".$filename.PHP_EOL;
+                $this->deleteOnRemote($connection, $filename);
             }
         } catch(\Exception $e) {
             return $e->getMessage();
@@ -60,7 +62,9 @@ class GetCheckins extends Command
     }
 
     public function deleteOnRemote($connection, $filename){
-        $connection->delete(self::REMOTE_CHECKINS_PATH.$filename, false);
+        if($connection->delete(self::REMOTE_CHECKINS_PATH.$filename, false)){
+            echo "Deleted on remote: ".$filename.PHP_EOL;
+        }
     }
 
     public function uploadToRemote($connection, $filename){

@@ -67,7 +67,7 @@ class SyncCheckin2NS extends Command
     }    
 
     public function processCheckin($data){
-        echo $data->id;
+        echo "Processing ".$data->id;
     	$this->id = $data->id;
     	$data->rep_id = $this->getRepID($data->rep_email);
     	if($data->type == 'PhoneCall'){
@@ -182,7 +182,7 @@ class SyncCheckin2NS extends Command
     public function pushCheckin($request){
     	$addResponse = $this->service->addList($request);
 		if ($addResponse->writeResponseList->status->isSuccess ==  true) {
-			echo "Success ";
+			echo " Success.";
 		    $this->updateCheckin($this->id);
 		} else {
 		    echo "Error ".$addResponse->writeResponseList->status->statusDetail;
