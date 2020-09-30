@@ -66,7 +66,7 @@ class InsertCheckins extends Command
         $file = Storage::disk('local')->get($filename);
         $newfilename = date("mdY").'_'.$filename;
         if(Storage::disk('s3')->put('badger/'.$newfilename, $file)){
-            echo "Saved ".$filename." to S3";
+            echo "Saved ".$filename." to S3".PHP_EOL;
             return 1;
         }
         else{

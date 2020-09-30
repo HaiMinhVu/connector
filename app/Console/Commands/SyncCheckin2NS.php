@@ -70,7 +70,7 @@ class SyncCheckin2NS extends Command
         echo "Processing ".$data->id;
     	$this->id = $data->id;
     	$data->rep_id = $this->getRepID($data->rep_email);
-    	if($data->type == 'PhoneCall'){
+    	if($data->type == 'Phone Call'){
     		$this->processPhoneCall($data);
     	}
     	else if($data->type == 'Email'){
