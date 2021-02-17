@@ -14,7 +14,7 @@ class SalesRepObserver
      */
     public function creating(SalesRep $salesRep)
     {
-        $salesRep->ismod = 0;
+        // $salesRep->ismod = 0;
     }
 
     /**
@@ -25,6 +25,6 @@ class SalesRepObserver
      */
     public function updating(SalesRep $salesRep)
     {
-        $salesRep->ismod = 1;
+        // $salesRep->ismod = 1;
     }
 }

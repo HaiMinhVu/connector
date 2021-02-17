@@ -14,7 +14,7 @@ class BadgerAccountObserver
      */
     public function creating(BadgerAccount $badgerAccount)
     {
-        $badgerAccount->_ChangeType = BadgerAccount::CHANGE_TYPE_INSERT;
+        $badgerAccount->change_type = BadgerAccount::CHANGE_TYPE_INSERT;
     }
 
     /**
@@ -25,6 +25,6 @@ class BadgerAccountObserver
      */
     public function updating(BadgerAccount $badgerAccount)
     {
-        $badgerAccount->_ChangeType = BadgerAccount::CHANGE_TYPE_UPDATE;
+        $badgerAccount->change_type = BadgerAccount::CHANGE_TYPE_UPDATE;
     }
 }

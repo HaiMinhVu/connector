@@ -11,42 +11,40 @@ class BadgerAccount extends Model {
 
     protected $primaryKey = 'nsid';
 
-    protected $connection = 'badgeraccounts';
+    // protected $connection = 'badgeraccounts';
 
-    protected $table = 'badgeraccounts';
+    protected $table = 'eu_badgeraccounts';
 
     public $timestamps = false;
 
     protected $fillable = [
-        '_Name',
-        '_Address',
-        '_Phone',
-        '_Notes',
         'nsid',
-        '_AccountOwner',
-        'Business Email',
-        'Contact Name',
-        'Contact Email',
-        'is Person',
-        'Status',
-        'url',
-        'category',
+        'company_name',
+        'sale_rep',
+        'status',
         'territory',
-        '_LatLong',
-        'src',
-        'tick',
-        'active',
-        'lastModifiedDate',
-        '_ChangeType',
-        'crc',
-        'lastcrc',
-        'ismod'
-    ];
-
-    protected $hidden = [
-        'crc',
-        'lastcrc',
-        'src'
+        'shipping_address1',
+        'shipping_address2',
+        'shipping_city',
+        'shipping_country',
+        'shipping_zip',
+        'primary_contact',
+        'phone',
+        'email',
+        'fax',
+        'alt_contact',
+        'office_phone',
+        'license_required',
+        'billing_address1',
+        'billing_address2',
+        'billing_city',
+        'billing_state',
+        'billing_zip',
+        'billing_country',
+        'account_category',
+        'bg_tax_number',
+        'business_model',
+        'change_type'
     ];
 
     /**
@@ -64,33 +62,37 @@ class BadgerAccount extends Model {
         return "https://system.na1.netsuite.com/app/common/entity/custjob.nl?id={$this->nsid}";
     }
 
-    public function getStage()
-    {
-        $status = explode("-", $this->Status);
-        return trim($status[0]);
-    }
-
     public function formatForBadger()
     {
-        if($this->getAttribute("is Person")) dd($this);
         return [
-            "_ChangeType" => $this->_ChangeType,
-            "_Name" => 	$this->_Name,
-            "_Address" => $this->_Address,
-            "_Phone" =>	$this->_Phone,
-            "_Notes" =>	$this->_Notes,
-            "nsid" => $this->nsid,
-            "_AccountOwner" => $this->_AccountOwner,
-            "Business Email" => $this->getAttribute("Business Email"),
-            "Contact Name" => $this->getAttribute("Contact Name"),
-            "Contact Email" => $this->getAttribute("Contact Email"),
-            "is Person" => $this->getAttribute("is Person"),
-            "Status" =>	$this->Status,
-            "url" => $this->url,
-            "category" => $this->category,
-            "territory" => $this->territory,
-            "NetSuite" => $this->getNetSuiteUrl(),
-            "Stage" => $this->getStage()
+            'nsid' => $this->change_type,
+            'company_name' => $this->company_name,
+            'sale_rep' => $this->sale_rep,
+            'status' => $this->status,
+            'territory' => $this->territory,
+            'shipping_address1' => $this->shipping_address1,
+            'shipping_address2' => $this->shipping_address2,
+            'shipping_city' => $this->shipping_city,
+            'shipping_country' => $this->shipping_country,
+            'shipping_zip' => $this->shipping_zip,
+            'primary_contact' => $this->primary_contact,
+            'phone' => $this->phone,
+            'email' => $this->email,
+            'fax' => $this->fax,
+            'alt_contact' => $this->alt_contact,
+            'office_phone' => $this->office_phone,
+            'license_required' => $this->license_required,
+            'billing_address1' => $this->billing_address1,
+            'billing_address2' => $this->billing_address2,
+            'billing_city' => $this->billing_city,
+            'billing_state' => $this->billing_state,
+            'billing_zip' => $this->billing_zip,
+            'billing_country' => $this->billing_country,
+            'account_category' => $this->account_category,
+            'bg_tax_number' => $this->bg_tax_number,
+            'business_model' => $this->business_model,
+            'change_type' => $this->change_type,
+            'NetSuiteUrl' => $this->getNetSuiteUrl()
         ];
     }
 }

@@ -12,17 +12,24 @@ use NetSuite\Classes\{
     CustomerSearch,
     CustomerSearchAdvanced,
     CustomerSearchBasic,
+    CustomerSearchRow,
+    CustomerSearchRowBasic,
     SearchDateField,
     SearchDateFieldOperator,
     SearchRequest,
     SearchMoreWithIdRequest,
-    SearchBooleanField
+    SearchBooleanField,
 };
 
 class SavedSearch extends Service {
 
-    const PER_PAGE = 1000;
-    const NETSUITE_SAVED_SEARCH_ID = 'customsearch_badger_sync';
+    const PER_PAGE = 10;
+    const NETSUITE_SAVED_SEARCH_ID = 'customsearch_sm_badgermaps';
+    const TYPE = [
+        1 => 'I',
+        2 => 'D',
+        3 => 'U'
+    ];
 
     private $request;
     private $previousSearchId;
@@ -48,9 +55,6 @@ class SavedSearch extends Service {
     {
         $this->search->criteria = new CustomerSearch();
 		$this->search->criteria->basic = new CustomerSearchBasic();
-        $this->search->criteria->basic->isPerson = null;
-        $this->search->criteria->basic->isDefaultShipping = new SearchBooleanField;
-        $this->search->criteria->basic->isDefaultShipping->searchValue = true;
     }
 
     public function getTotalPages()
@@ -92,6 +96,7 @@ class SavedSearch extends Service {
         $this->previousSearchId = $response->searchResult->searchId;
 
         $results = collect($response->searchResult->searchRowList->searchRow);
+        // return $results;
         return $this->filterResults($results)->map(function($result){
             return $this->parseInitialResult($result);
         });
@@ -100,11 +105,9 @@ class SavedSearch extends Service {
     private function filterResults($results)
     {
         return $results->filter(function($item){
-            $hasAddress = !!$item->basic->address;
-            $hasSalesRep = !!$item->basic->salesRep;
-            $isDefaultShippingAddress = $item->basic->isDefaultShipping[0]->searchValue;
-
-            return $hasAddress && $hasSalesRep && $isDefaultShippingAddress;
+            $hasCompanyName = !!$item->basic->companyName;
+            $hasNSID = !!$item->basic->internalId[0];
+            return $hasCompanyName && $hasNSID;
         });
     }
 
@@ -112,9 +115,32 @@ class SavedSearch extends Service {
     {
         return [
             'nsid' => $result->basic->internalId[0]->searchValue->internalId,
-            "_Address" => str_replace(["\n","\r\n","\r"], " ", $result->basic->address[0]->searchValue),
-            "Business Email" => $result->basic->email ? $result->basic->email[0]->searchValue : '',
-            "SalesRepNSID" => $result->basic->salesRep[0]->searchValue->internalId
+            'company_name' => $result->basic->companyName ? $result->basic->companyName[0]->searchValue : '',
+            'sale_rep' => $result->salesRepJoin->email ? $result->salesRepJoin->email[0]->searchValue : '',
+            'status' => $result->basic->entityStatus ? $result->basic->entityStatus[0]->searchValue->internalId : '',
+            'territory' => $result->basic->territory ? $result->basic->territory[0]->searchValue->internalId : '',
+            'shipping_address1' => $result->basic->shipAddress1 ? $result->basic->shipAddress1[0]->searchValue : '',
+            // 'shipping_address2' => $this->shipping_address2,
+            'shipping_city' => $result->basic->shipCity ? $result->basic->shipCity[0]->searchValue : '',
+            'shipping_country' => $result->basic->shipCountry ? $result->basic->shipCountry[0]->searchValue : '',
+            'shipping_zip' => $result->basic->shipZip ? $result->basic->shipZip[0]->searchValue : '',
+            // 'primary_contact' => $this->primary_contact,
+            'phone' => $result->basic->phone ? $result->basic->phone[0]->searchValue : '',
+            'email' => $result->basic->email ? $result->basic->email[0]->searchValue : '',
+            // 'fax' => $this->fax,
+            // 'alt_contact' => $this->alt_contact,
+            // 'office_phone' => $this->office_phone,
+            'license_required' => $result->basic->customFieldList->customField[2]->searchValue == 'true' ? 'Yes' : 'No',
+            'billing_address1' => $result->basic->billAddress1 ? $result->basic->billAddress1[0]->searchValue : '',
+            // 'billing_address2' => $this->billing_address2,
+            'billing_city' => $result->basic->billCity ? $result->basic->billCity[0]->searchValue : '',
+            // 'billing_state' => $this->billing_state,
+            'billing_zip' => $result->basic->billZipCode ? $result->basic->billZipCode[0]->searchValue : '',
+            'billing_country' => $result->basic->billCountry ? $result->basic->billCountry[0]->searchValue : '',
+            // 'account_category' => $this->account_category,
+            'bg_tax_number' => $result->basic->customFieldList->customField[1]->searchValue,
+            // 'business_model' => $this->business_model,
+            'change_type' => isset($result->basic->customFieldList->customField[0]->searchValue->internalId) ? self::TYPE[$result->basic->customFieldList->customField[0]->searchValue->internalId] : 'U'
         ];
     }
 
@@ -180,4 +206,7 @@ class SavedSearch extends Service {
             "lastModifiedDate" => $records->lastModifiedDate
         ];
     }
+
+
+
 }
