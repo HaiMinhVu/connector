@@ -3,6 +3,13 @@
 namespace App\Services\NetSuite\Customer;
 
 use App\Services\NetSuite\Service;
+use App\Services\NetSuite\CustomList\{
+    BusinessModel,
+    AccountCategory,
+    Territory,
+    CustomerStatus
+};
+
 use App\Models\{
     CustEntity,
     SalesRep
@@ -12,34 +19,46 @@ use NetSuite\Classes\{
     CustomerSearch,
     CustomerSearchAdvanced,
     CustomerSearchBasic,
-    CustomerSearchRow,
-    CustomerSearchRowBasic,
     SearchDateField,
     SearchDateFieldOperator,
     SearchRequest,
     SearchMoreWithIdRequest,
-    SearchBooleanField,
 };
 
 class SavedSearch extends Service {
 
-    const PER_PAGE = 10;
+    const PER_PAGE = 1000;
     const NETSUITE_SAVED_SEARCH_ID = 'customsearch_sm_badgermaps';
-    const TYPE = [
-        1 => 'I',
-        2 => 'D',
-        3 => 'U'
+
+    const ACCOUNT_CATEGORY = 'custentity_sm_accountcategory';
+    const LICENSE_REQUIRED = 'custentity_sm_licenserequiredforsale';
+    const BUSINESS_MODEL = 'custentity_sm_businessmodel';
+    const CUSTOMFIELDS = [
+        'custentity_sm_licenserequiredforsale' => 'license_required',
+        'custentity_bg_taxid' => 'bg_tax_number',
+        'custentity_sm_accountcategory' => 'account_category',
+        'custentity_sm_businessmodel' => 'business_model'
     ];
+
+
 
     private $request;
     private $previousSearchId;
     private $totalPages;
+    private $businessModels;
+    private $accountCategories;
+    private $territories;
+    private $customerStatuses;
 
-    public function __construct()
+    public function __construct(BusinessModel $businessModel, AccountCategory $accountCategory, Territory $territory, CustomerStatus $customerStatus)
     {
         parent::__construct();
         $this->setSavedSearchScriptId();
         $this->setSearchCriteria();
+        $this->businessModels = $businessModel->getRequest();
+        $this->accountCategories = $accountCategory->getRequest();
+        $this->territories = $territory->getRequest();
+        $this->customerStatuses = $customerStatus->getRequest();
     }
 
     public function setFromDate($dateString)
@@ -96,7 +115,6 @@ class SavedSearch extends Service {
         $this->previousSearchId = $response->searchResult->searchId;
 
         $results = collect($response->searchResult->searchRowList->searchRow);
-        // return $results;
         return $this->filterResults($results)->map(function($result){
             return $this->parseInitialResult($result);
         });
@@ -113,100 +131,64 @@ class SavedSearch extends Service {
 
     private function parseInitialResult($result)
     {
-        return [
+        $customFields = $this->processCustomFieldList($result->basic->customFieldList->customField);
+        $fields = [
             'nsid' => $result->basic->internalId[0]->searchValue->internalId,
             'company_name' => $result->basic->companyName ? $result->basic->companyName[0]->searchValue : '',
             'sale_rep' => $result->salesRepJoin->email ? $result->salesRepJoin->email[0]->searchValue : '',
-            'status' => $result->basic->entityStatus ? $result->basic->entityStatus[0]->searchValue->internalId : '',
-            'territory' => $result->basic->territory ? $result->basic->territory[0]->searchValue->internalId : '',
+            'status' => $result->basic->entityStatus ? 
+                        (array_key_exists($result->basic->entityStatus[0]->searchValue->internalId ,$this->customerStatuses) ? $this->customerStatuses[$result->basic->entityStatus[0]->searchValue->internalId] : '')
+                         : '',
+            'territory' => $result->basic->territory ? $this->territories[$result->basic->territory[0]->searchValue->internalId] : '',
             'shipping_address1' => $result->basic->shipAddress1 ? $result->basic->shipAddress1[0]->searchValue : '',
-            // 'shipping_address2' => $this->shipping_address2,
+            'shipping_address2' => $result->basic->shipAddress2 ? $result->basic->shipAddress2[0]->searchValue : '',
             'shipping_city' => $result->basic->shipCity ? $result->basic->shipCity[0]->searchValue : '',
             'shipping_country' => $result->basic->shipCountry ? $result->basic->shipCountry[0]->searchValue : '',
             'shipping_zip' => $result->basic->shipZip ? $result->basic->shipZip[0]->searchValue : '',
-            // 'primary_contact' => $this->primary_contact,
+            'primary_contact' => $result->basic->contact ? $result->basic->contact[0]->searchValue : '',
+            'alt_contact' => $result->basic->altContact ? $result->basic->altContact[0]->searchValue : '',
             'phone' => $result->basic->phone ? $result->basic->phone[0]->searchValue : '',
+            'office_phone' => $result->basic->altPhone ? $result->basic->altPhone[0]->searchValue : '',
             'email' => $result->basic->email ? $result->basic->email[0]->searchValue : '',
-            // 'fax' => $this->fax,
-            // 'alt_contact' => $this->alt_contact,
-            // 'office_phone' => $this->office_phone,
-            'license_required' => $result->basic->customFieldList->customField[2]->searchValue == 'true' ? 'Yes' : 'No',
+            'fax' => $result->basic->fax ? $result->basic->fax[0]->searchValue : '',
             'billing_address1' => $result->basic->billAddress1 ? $result->basic->billAddress1[0]->searchValue : '',
-            // 'billing_address2' => $this->billing_address2,
+            'billing_address2' => $result->basic->billAddress2 ? $result->basic->billAddress2[0]->searchValue : '',
             'billing_city' => $result->basic->billCity ? $result->basic->billCity[0]->searchValue : '',
-            // 'billing_state' => $this->billing_state,
+            'billing_state' => $result->basic->billState ? $result->basic->billState[0]->searchValue : '',
             'billing_zip' => $result->basic->billZipCode ? $result->basic->billZipCode[0]->searchValue : '',
             'billing_country' => $result->basic->billCountry ? $result->basic->billCountry[0]->searchValue : '',
-            // 'account_category' => $this->account_category,
-            'bg_tax_number' => $result->basic->customFieldList->customField[1]->searchValue,
-            // 'business_model' => $this->business_model,
-            'change_type' => isset($result->basic->customFieldList->customField[0]->searchValue->internalId) ? self::TYPE[$result->basic->customFieldList->customField[0]->searchValue->internalId] : 'U'
         ];
+        return array_merge($fields, $customFields);
     }
 
-    public static function getCustomerRecords($nsid)
+    private function processCustomFieldList($fields)
     {
-        try {
-            $record = new Record();
-            $response = $record->getByNSID($nsid);
-        } catch(\Exception $e) {
-            // dd($e->getMessage());
-        }
-
-        $response->readResponse->record->customFieldList->customField = collect($response->readResponse->record->customFieldList->customField)->mapWithKeys(function($field){
-            $key = CustEntity::getDescById($field->scriptId);
-            $value = $field->value;
-            if(is_object($value)) {
-                $value = $value->name;
+        $res = [];
+        foreach ($fields as $field) {
+            if(array_key_exists($field->scriptId, self::CUSTOMFIELDS)){
+                if($field->scriptId == self::LICENSE_REQUIRED){
+                    $res[self::CUSTOMFIELDS[$field->scriptId]] = $field->searchValue == 'true' ? 'Yes' : 'No';
+                }
+                elseif ($field->scriptId == self::ACCOUNT_CATEGORY) {
+                    $res[self::CUSTOMFIELDS[$field->scriptId]] = $this->accountCategories[$field->searchValue->internalId];
+                }
+                elseif ($field->scriptId == self::BUSINESS_MODEL) {
+                    $res[self::CUSTOMFIELDS[$field->scriptId]] = $this->processBusinessModel($field->searchValue);
+                }
+                else{
+                    $res[self::CUSTOMFIELDS[$field->scriptId]] = $field->searchValue;
+                }
             }
-            if(is_array($value)) {
-                $value = collect($value)->map(function($item){
-                    return $item->name;
-                });
-            }
-            return [$key => $value];
-        });
-
-        return $response;
-    }
-
-    private static function getContact(?object $contactRoleList) : ?object
-    {
-        if($contactRoleList) {
-          $firstContact = $contactRoleList->contactRoles[0];
-          return (object)[
-            'name' => $firstContact->contact->name,
-            'email' => $firstContact->email
-          ];
         }
-        return null;
+        return $res;
     }
 
-    public static function getRecords($data) : array
+    private function processBusinessModel($businessModel)
     {
-        $nsid = $data['nsid'];
-        $response = self::getCustomerRecords($nsid);
-        $records = $response->readResponse->record;
-        $salesRep = SalesRep::where('nsid', $data['SalesRepNSID'])->first();
-        $type = optional($records->customFieldList->customField->get('Business Model'));
-        $isPerson = $type ? ($type->first() == 'Individual' ? 1 : 0) : 0;
-        $contact = optional(self::getContact($records->contactRolesList));
-
-        return [
-            "_Name" => $records->companyName,
-            "_Phone" => preg_replace('/[^0-9]/', '', $records->phone),
-            "_AccountOwner" => optional($salesRep)->email,
-            "Contact Name" => $contact->name ?? '',
-            "Contact Email" => $contact->email ?? '',
-            'is Person' => $isPerson,
-            "Status" => $records->entityStatus->name,
-            "url" => $records->url,
-            "category" => $records->customFieldList->customField->get('Account Category'),
-            "territory" => optional($records->territory)->name,
-            "lastModifiedDate" => $records->lastModifiedDate
-        ];
+        $string = '';
+        foreach ($businessModel as $bm) {
+            $string .= $this->businessModels[$bm->internalId].'/';
+        }
+        return $string;
     }
-
-
-
 }

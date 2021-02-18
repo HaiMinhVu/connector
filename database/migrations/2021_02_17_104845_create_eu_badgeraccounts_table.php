@@ -26,11 +26,11 @@ class CreateEuBadgeraccountsTable extends Migration
                 $table->string('shipping_country')->nullable();
                 $table->string('shipping_zip')->nullable();
                 $table->string('primary_contact')->nullable();
+                $table->string('alt_contact')->nullable();
                 $table->string('phone')->nullable();
+                $table->string('office_phone')->nullable();
                 $table->string('email')->nullable();
                 $table->string('fax')->nullable();
-                $table->string('alt_contact')->nullable();
-                $table->string('office_phone')->nullable();
                 $table->string('license_required')->nullable();
                 $table->string('billing_address1')->nullable();
                 $table->string('billing_address2')->nullable();

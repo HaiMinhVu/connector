@@ -43,7 +43,7 @@ class Badger {
     public function export($data)
     {
         $this->createCSVFile($data);
-        $this->uploadViaFTP();
+        // $this->uploadViaFTP();
     }
 
     public function exportCustomers($fromDate = null)

@@ -17,13 +17,27 @@ use App\Models\{
     SalesRep
 };
 use App\Services\NetSuite\Customer\{
-    SavedSearch as CustomerSavedSearch,
-    Record as NSCustomerRecord
+    SavedSearch as CustomerSavedSearch
 };
+// use App\Services\NetSuite\CustomList\{
+//     BusinessModel
+// };
+
 use App\Services\Badger\Badger as BadgerService;
 use Carbon\Carbon;
 use App\Jobs\{PushToBadger, SyncBadgerAccount};
 use Queue;
+
+use NetSuite\NetSuiteService;
+use NetSuite\Classes\{
+    GetRequest,
+    RecordRef,
+    SearchRequest,
+    CustomListSearch,
+    CustomListSearchBasic,
+    CustomRecordSearch,
+    CustomRecordSearchBasic
+};
 
 use Log;
 /**
@@ -44,6 +58,7 @@ class Test extends Command
     private $totalPages;
     private $fromDate;
     private $badgerService;
+    private $businessModels;
 
     /**
      * The console command name.
@@ -77,18 +92,15 @@ class Test extends Command
     {
         $this->info("Retrieving data from NetSuite");
         $this->setFromDate();
-
         $this->runInitialSearch();
-        $this->info("Queuing local data update");
-        // $this->initProgressBar();
+        $this->initProgressBar();
         $this->updateAccounts($this->response);
+        $this->runSearches();
 
-        // $this->addAllToQueue();
 
-        // $this->runSearches();
 
-        // $this->info(PHP_EOL."Queueing push to badger");
-        // $this->queueBadgerPush();
+        // $this->pushToBadger($this->fromDate);
+        // Log::info($this->fromDate);
     }
 
     private function runInitialSearch()
@@ -97,9 +109,9 @@ class Test extends Command
             $this->response = $this->savedSearch->search();
             $this->totalPages = $this->savedSearch->getTotalPages();
         } catch(\Exception $e) {
-            $this->info($e);
+            Log::info($e);
             $this->info("Retrying initial search");
-            // $this->runInitialSearch();
+            $this->runInitialSearch();
         }
     }
 
@@ -109,7 +121,6 @@ class Test extends Command
         for($page=2;$page<=$this->totalPages;$page++) {
             $this->bar->setProgress($page);
             $this->setResponse($page);
-            $this->addAllToQueue();
         }
         $this->bar->finish();
     }
@@ -118,18 +129,11 @@ class Test extends Command
     {
         try {
             $this->response = $this->savedSearch->search($page);
+            $this->updateAccounts($this->response);
         } catch(\Exception $e) {
-            // $this->error(PHP_EOL.$e->getMessage());
             $this->info("Retrying page {$page}/{$this->savedSearch->getTotalPages()}");
             $this->setResponse($page);
         }
-    }
-
-    private function addAllToQueue()
-    {
-        $this->response->map(function($item){
-            dispatch(new SyncBadgerAccount($item))->onQueue(self::BADGER_ACCOUNT_QUEUE);
-        });
     }
 
     private function initProgressBar()
@@ -147,15 +151,14 @@ class Test extends Command
 
     private function updateAccounts($response)
     {
-        // dd($response[0]);
         $response->map(function($account){
             BadgerAccount::updateOrCreate(['nsid' => $account['nsid']], $account);
         });
     }
 
-    private function queueBadgerPush()
+    private function pushToBadger($fromDate)
     {
-        dispatch(new PushToBadger($this->fromDate))->onQueue(self::BADGER_UPDATE_QUEUE);
+        $badgerService->exportCustomers($fromDate);
     }
 
 }
