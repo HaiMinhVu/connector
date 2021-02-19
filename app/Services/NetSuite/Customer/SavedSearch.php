@@ -4,10 +4,9 @@ namespace App\Services\NetSuite\Customer;
 
 use App\Services\NetSuite\Service;
 use App\Services\NetSuite\CustomList\{
-    BusinessModel,
-    AccountCategory,
     Territory,
-    CustomerStatus
+    CustomerStatus,
+    CustomList
 };
 use App\Services\NetSuite\Contact\{
     Record as ContactRecord
@@ -43,7 +42,8 @@ class SavedSearch extends Service {
         'custentity_sm_businessmodel' => 'business_model'
     ];
 
-
+    const ACCOUNT_CATEGORY_LIST_ID = '116';
+    const BUSINESS_MODEL_LIST_ID = '124';
 
     private $request;
     private $previousSearchId;
@@ -51,17 +51,17 @@ class SavedSearch extends Service {
     private $businessModels;
     private $accountCategories;
     private $territories;
-    private $customerStatuses;
+    private $customerStatus;
 
-    public function __construct(BusinessModel $businessModel, AccountCategory $accountCategory, Territory $territory, CustomerStatus $customerStatus)
+    public function __construct(CustomList $customList, Territory $territory, CustomerStatus $customerStatus)
     {
         parent::__construct();
         $this->setSavedSearchScriptId();
         $this->setSearchCriteria();
-        $this->businessModels = $businessModel->getRequest();
-        $this->accountCategories = $accountCategory->getRequest();
+        $this->businessModels = $customList->getCustomList(self::BUSINESS_MODEL_LIST_ID);
+        $this->accountCategories = $customList->getCustomList(self::ACCOUNT_CATEGORY_LIST_ID);
         $this->territories = $territory->getRequest();
-        $this->customerStatuses = $customerStatus->getRequest();
+        $this->customerStatus = $customerStatus;
     }
 
     public function setFromDate($dateString)
@@ -139,9 +139,7 @@ class SavedSearch extends Service {
             'nsid' => $result->basic->internalId[0]->searchValue->internalId,
             'company_name' => $result->basic->companyName ? $result->basic->companyName[0]->searchValue : '',
             'sale_rep' => $result->salesRepJoin->email ? $result->salesRepJoin->email[0]->searchValue : '',
-            'status' => $result->basic->entityStatus ? 
-                        (array_key_exists($result->basic->entityStatus[0]->searchValue->internalId ,$this->customerStatuses) ? $this->customerStatuses[$result->basic->entityStatus[0]->searchValue->internalId] : '')
-                         : '',
+            'status' => $result->basic->entityStatus ? $this->customerStatus->getStatus($result->basic->entityStatus[0]->searchValue->internalId) : '',
             'territory' => $result->basic->territory ? $this->territories[$result->basic->territory[0]->searchValue->internalId] : '',
             'shipping_address1' => $result->basic->shipAddress1 ? $result->basic->shipAddress1[0]->searchValue : '',
             'shipping_address2' => $result->basic->shipAddress2 ? $result->basic->shipAddress2[0]->searchValue : '',

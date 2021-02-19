@@ -12,6 +12,7 @@ use App\Services\NetSuite\Customer\{
 
 use App\Services\Badger\Badger as BadgerService;
 use Carbon\Carbon;
+use Log;
 
 class SyncBadgerAccounts extends Command
 {
@@ -25,8 +26,6 @@ class SyncBadgerAccounts extends Command
     private $totalPages;
     private $fromDate;
     private $badgerService;
-    private $businessModels;
-
 
     protected $signature = "sync:badger {--from-date= : Specify the last modified date for results}";
     protected $description = "Sync savedsearch from NS to badger";
@@ -54,6 +53,7 @@ class SyncBadgerAccounts extends Command
         try {
             $this->response = $this->savedSearch->search();
             $this->totalPages = $this->savedSearch->getTotalPages();
+            Log::info($this->totalPages);
         } catch(\Exception $e) {
             Log::info($e);
             $this->info("Retrying initial search");

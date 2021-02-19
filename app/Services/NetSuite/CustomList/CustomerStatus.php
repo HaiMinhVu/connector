@@ -2,46 +2,38 @@
 
 namespace App\Services\NetSuite\CustomList;
 
-class CustomerStatus {
+use App\Services\NetSuite\Service;
+use NetSuite\Classes\{
+    GetRequest,
+    RecordRef,
+    RecordType
+};
 
-    private $response;
+class CustomerStatus extends Service {
+
+    private $request;
 
     public function __construct()
     {
-        $this->init();
+        parent::__construct();
+        $this->setRequest();
     }
 
-    protected function init()
+    private function setRequest()
     {
-        $this->response = [
-            17 => "Lead - Unknown",
-            25 => "Lead - Marketing",
-            29 => "Lead - Not EMEA Region",
-            26 => "Lead - Qualified",
-            27 => "Lead - Qualified (buying from Distributor)",
-            7 => "Lead - Qualified (interested)",
-            18 => "Lead - Qualified (uninterested)",
-            66 => "Lead - Unqualified",
-            8 => "Prospect - Catalog/Line Review",
-            14 => "Prospect - Closed Lost",
-            9 => "Prospect - Identified Decision Makers",
-            10 => "Prospect - Identifying needs",
-            11 => "Prospect - In Negotiation",
-            12 => "Prospect - Purchasing",
-            13 => "Customer - Closed Won",
-            15 => "Customer - Customer End user",
-            19 => "Customer - Customer ID Needs",
-            28 => "Customer - Customer Lost (Marketing)",
-            22 => "Customer - Customer negotiation",
-            21 => "Customer - Customer proposal",
-            16 => "Customer - Lost Customer",
-            23 => "Customer - Marketing",
-            24 => "Customer - Marketing End User",
-        ];
+        $this->request = new GetRequest();
+        $this->request->baseRef = new RecordRef();
     }
 
-    public function getRequest()
+    public function getStatus($nsid)
     {
-        return $this->response;
+        $this->request->baseRef->internalId = $nsid;
+        $this->request->baseRef->type = RecordType::customerStatus;
+        return $this->formatResult($this->service->get($this->request));
+    }
+
+    public function formatResult($response)
+    {
+        return $response->readResponse->record->stage.' '.$response->readResponse->record->name;
     }
 }
