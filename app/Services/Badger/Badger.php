@@ -6,6 +6,7 @@ use phpseclib\Net\SFTP;
 use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
 use App\Models\BadgerAccount;
+use Storage;
 
 class Badger {
 
@@ -17,7 +18,7 @@ class Badger {
     public function __construct()
     {
         $this->setupClient();
-        $this->fileName = Carbon::now()->format('Y_m_d_Hi');
+        $this->fileName = Carbon::now()->format('Y_m_d');
     }
 
     private function setupClient()
@@ -43,7 +44,8 @@ class Badger {
     public function export($data)
     {
         $this->createCSVFile($data);
-        // $this->uploadViaFTP();
+        $this->uploadViaFTP();
+        $this->deleteFile("{$this->fileName}.csv");
     }
 
     public function exportCustomers($fromDate = null)
@@ -53,7 +55,7 @@ class Badger {
         } catch(\Exception $e) {
             $date = \Carbon\Carbon::now()->subDay();
         }
-        $badgerAccounts = BadgerAccount::where('lastModifiedDate', '>=', $date->toDateTimeString())->get();
+        $badgerAccounts = BadgerAccount::where('updated_at', '>=', $date->toDateTimeString())->get();
         $badgerAccounts = $badgerAccounts->map(function($badgerAccount){
             return $badgerAccount->formatForBadger();
         });
@@ -81,7 +83,7 @@ class Badger {
             $file = File::get($this->localFile());
             $this->ftpClient->put($this->remoteFile(), $file);
         } catch (\Exception $e) {
-            // dd($e->getMessage());
+            dd($e->getMessage());
         }
     }
 
@@ -95,4 +97,7 @@ class Badger {
         return self::REMOTE_UPLOAD_PATH."/{$this->fileName}.csv";
     }
 
+    private function deleteFile($filename){
+        Storage::disk('local')->delete($filename);
+    }
 }

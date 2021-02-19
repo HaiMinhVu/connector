@@ -42,6 +42,7 @@ class CreateEuBadgeraccountsTable extends Migration
                 $table->string('bg_tax_number')->nullable();
                 $table->string('business_model')->nullable();
                 $table->string('change_type')->nullable()->default('U');
+                $table->timestamps();
             });
         }
     }

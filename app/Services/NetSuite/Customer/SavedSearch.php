@@ -9,6 +9,9 @@ use App\Services\NetSuite\CustomList\{
     Territory,
     CustomerStatus
 };
+use App\Services\NetSuite\Contact\{
+    Record as ContactRecord
+};
 
 use App\Models\{
     CustEntity,
@@ -145,7 +148,7 @@ class SavedSearch extends Service {
             'shipping_city' => $result->basic->shipCity ? $result->basic->shipCity[0]->searchValue : '',
             'shipping_country' => $result->basic->shipCountry ? $result->basic->shipCountry[0]->searchValue : '',
             'shipping_zip' => $result->basic->shipZip ? $result->basic->shipZip[0]->searchValue : '',
-            'primary_contact' => $result->basic->contact ? $result->basic->contact[0]->searchValue : '',
+            'primary_contact' => $result->basic->contact ? $this->getContactRecord($result->basic->contact[0]->searchValue) : '',
             'alt_contact' => $result->basic->altContact ? $result->basic->altContact[0]->searchValue : '',
             'phone' => $result->basic->phone ? $result->basic->phone[0]->searchValue : '',
             'office_phone' => $result->basic->altPhone ? $result->basic->altPhone[0]->searchValue : '',
@@ -190,5 +193,16 @@ class SavedSearch extends Service {
             $string .= $this->businessModels[$bm->internalId].'/';
         }
         return $string;
+    }
+
+    public static function getContactRecord($nsid)
+    {
+        try {
+            $record = new ContactRecord();
+            $response = $record->getByNSID($nsid);
+        } catch(\Exception $e) {
+            dd($e->getMessage());
+        }
+        return $response->readResponse->record->entityId;
     }
 }

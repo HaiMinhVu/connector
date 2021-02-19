@@ -15,7 +15,7 @@ class BadgerAccount extends Model {
 
     protected $table = 'eu_badgeraccounts';
 
-    public $timestamps = false;
+    // public $timestamps = false;
 
     protected $fillable = [
         'nsid',
@@ -65,34 +65,33 @@ class BadgerAccount extends Model {
     public function formatForBadger()
     {
         return [
-            'nsid' => $this->change_type,
-            'company_name' => $this->company_name,
-            'sale_rep' => $this->sale_rep,
-            'status' => $this->status,
-            'territory' => $this->territory,
-            'shipping_address1' => $this->shipping_address1,
-            'shipping_address2' => $this->shipping_address2,
-            'shipping_city' => $this->shipping_city,
-            'shipping_country' => $this->shipping_country,
-            'shipping_zip' => $this->shipping_zip,
-            'primary_contact' => $this->primary_contact,
-            'phone' => $this->phone,
-            'email' => $this->email,
-            'fax' => $this->fax,
-            'alt_contact' => $this->alt_contact,
-            'office_phone' => $this->office_phone,
-            'license_required' => $this->license_required,
-            'billing_address1' => $this->billing_address1,
-            'billing_address2' => $this->billing_address2,
-            'billing_city' => $this->billing_city,
-            'billing_state' => $this->billing_state,
-            'billing_zip' => $this->billing_zip,
-            'billing_country' => $this->billing_country,
-            'account_category' => $this->account_category,
-            'bg_tax_number' => $this->bg_tax_number,
-            'business_model' => $this->business_model,
-            'change_type' => $this->change_type,
-            'NetSuiteUrl' => $this->getNetSuiteUrl()
+            'Internal ID' => $this->nsid,
+            'Company Name' => $this->company_name,
+            'Sales Rep' => $this->sale_rep,
+            'Status' => $this->status,
+            'Territory' => $this->territory,
+            'Shipping Address 1' => $this->shipping_address1,
+            'Shipping Address 2' => $this->shipping_address2,
+            'Shipping City' => $this->shipping_city,
+            'Shipping Country' => $this->shipping_country,
+            'Shipping Zip' => $this->shipping_zip,
+            'Primary Contact' => $this->primary_contact,
+            'Phone' => $this->phone,
+            'Email' => $this->email,
+            'Fax' => $this->fax,
+            'Alt. Contact' => $this->alt_contact,
+            'Office Phone' => $this->office_phone,
+            'License Required' => $this->license_required,
+            'Billing Address 1' => $this->billing_address1,
+            'Billing Address 2' => $this->billing_address2,
+            'Billing City' => $this->billing_city,
+            'Billing State/Province' => $this->billing_state,
+            'Billing Zip' => $this->billing_zip,
+            'Billing Country' => $this->billing_country,
+            'Account Category' => $this->account_category,
+            'BG Tax Number' => $this->bg_tax_number,
+            'Business Model' => $this->business_model,
+            'Change Type' => $this->change_type,
         ];
     }
 }
