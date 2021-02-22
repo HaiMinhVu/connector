@@ -126,8 +126,7 @@ class PushData extends Command
     private function generateFileName(Attachment $attachment) : string
     {
         $fileInfo = pathinfo($attachment->getFilename());
-        $dateString = Carbon::now()->format('Ymd');
-        return "{$fileInfo['filename']}_{$dateString}.{$fileInfo['extension']}";
+        return "{$fileInfo['basename']}";
     }
 
 }
