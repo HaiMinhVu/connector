@@ -4,10 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\Badger\Badger as BadgerService;
-use App\Models\{
-    Checkin,    
-};
-use Log;
+use App\Services\NetSuite\Badger\Checkin as BadgerCheckin;
 
 class SyncBadgerCheckins extends Command
 {
@@ -16,19 +13,20 @@ class SyncBadgerCheckins extends Command
     protected $description = 'Sync check-ins from badger to NS';
 
     private $badgerService;
-    private $checkins;
+    private $badgerCheckin;
 
-    public function __construct(BadgerService $badgerService)
+    public function __construct(BadgerService $badgerService, BadgerCheckin $badgerCheckin)
     {
         parent::__construct();
         $this->badgerService = $badgerService;
+        $this->badgerCheckin = $badgerCheckin;
     }
 
     public function handle()
     {
-        $this->badgerService->downloadCheckins();
-        $this->badgerService->insertCheckins();
+        // $this->badgerService->downloadCheckins();
         // $this->badgerService->insertCheckins();
+        // $this->badgerCheckin->syncCheckins();
     }
     
 }
