@@ -5,12 +5,19 @@ namespace App\Services\Badger;
 use phpseclib\Net\SFTP;
 use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
-use App\Models\BadgerAccount;
+
+use App\Services\NetSuite\Service;
+use App\Models\{
+    BadgerAccount,
+    BadgerCheckin
+};
 use Storage;
+
 
 class Badger {
 
     const REMOTE_UPLOAD_PATH = "dropbox/incoming/accounts";
+    const REMOTE_DOWNLOAD_PATH = "dropbox/outgoing/checkins/";
 
     private $ftpClient;
     private $fileName;
@@ -35,7 +42,7 @@ class Badger {
         $ftpClient = new SFTP($host);
 
         if (!$ftpClient->login($login, $password)) {
-        	throw new Exception('Login failed');
+            throw new Exception('Login failed');
         }
 
         return $ftpClient;
@@ -97,7 +104,100 @@ class Badger {
         return self::REMOTE_UPLOAD_PATH."/{$this->fileName}.csv";
     }
 
-    private function deleteFile($filename){
+    private function deleteFile($filename)
+    {
         Storage::disk('local')->delete($filename);
     }
+
+
+
+
+    
+
+    public function downloadCheckins(){
+        $files = $this->ftpClient->nlist(self::REMOTE_DOWNLOAD_PATH);
+        foreach ($files as $filename) {
+            if(strpos($filename,'.csv')){
+                $this->downloadFromRemote($filename);
+            }
+        }
+    }
+
+    private function downloadFromRemote($filename){
+        echo 'Downloading '.$filename;
+        try{
+            if(Storage::disk('local')->put($filename, $this->ftpClient->get(self::REMOTE_DOWNLOAD_PATH.$filename))){
+                echo " Downloaded".PHP_EOL;
+                $this->deleteOnRemote($filename);
+            }
+        } catch(\Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
+    private function deleteOnRemote($filename){
+        if($this->ftpClient->delete(self::REMOTE_DOWNLOAD_PATH.$filename, false)){
+            echo "Deleted on remote: ".$filename.PHP_EOL;
+        }
+    }
+
+    private function getAllFilenames(){
+        return array_filter(Storage::disk('local')->files(), function ($item) {
+            return strpos($item, '.csv');
+        });
+    }
+
+    public function insertCheckins(){
+        $filenames = $this->getAllFilenames();
+        foreach ($filenames as $filename) {
+            $file = Storage::disk('local')->get($filename);
+            $this->processFile($filename);
+        }
+    }
+
+    private function processFile($filename){
+        echo "Processing File ".$filename;
+        $file = fopen('storage/app/'.$filename, 'r');
+        $processedAll = 1;
+        $firstline = TRUE;
+        while (($row = fgetcsv($file)) !== FALSE) {
+            if($firstline){
+                $firstline = FALSE;
+                continue;
+            }
+            if($this->createCheckin($row) == 0){
+                $processedAll = 0;
+            }
+        }
+        if($processedAll){
+            echo " Proceeded".PHP_EOL;
+            // $this->deleteFile($filename);
+        }
+    }
+
+    private function createCheckin($data){
+        $checkin = new BadgerCheckin;
+        $checkin->rep_email = $data[1];
+        $checkin->account_name = $data[2];
+        $checkin->account_address = $data[3];
+        $checkin->date = $data[4];
+        $checkin->time = $data[5];
+        $checkin->local_time = $data[6];
+        $checkin->timezone = $data[7];
+        $checkin->comments = $data[9];
+        $checkin->customer_id = $data[10];
+        $checkin->type = $data[11] == '' ? 'Meeting' : $data[11];
+        $checkin->decision_maker_name = $data[12];
+        $checkin->next_step = $data[13];
+        $checkin->note = json_encode($data[14]);
+        if($checkin->save()){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+    
+
+
 }

@@ -23,7 +23,7 @@ use NetSuite\Classes\{
 class SavedSearch extends Service {
 
     const PER_PAGE = 200;
-    const NETSUITE_SAVED_SEARCH_ID = 'customsearch_sellmark_salesrep_emps';
+    const NETSUITE_SAVED_SEARCH_ID = 'customsearch_sm_salesroles';
 
     private $request;
 
@@ -59,19 +59,10 @@ class SavedSearch extends Service {
 
     public function search()
     {
-        $response = Cache::remember($this->getCacheId(), self::CACHE_SECONDS, function() {
-            $this->setRequest();
-            return $this->service->search($this->request);
-        });
-
+        $this->setRequest();
+        $response = $this->service->search($this->request);
         $results = collect($response->searchResult->searchRowList->searchRow);
         return $this->parse($results);
-    }
-
-    private function getCacheId()
-    {
-        $savedSearchScriptId = self::NETSUITE_SAVED_SEARCH_ID;
-        return "search_salesrep_{$savedSearchScriptId}";
     }
 
     private function parse($results)
@@ -88,13 +79,9 @@ class SavedSearch extends Service {
         return [
             "email" => $basic->email[0]->searchValue,
             "lastModifiedDate" => $basic->lastModifiedDate[0]->searchValue,
-            "first" => $basic->firstName[0]->searchValue,
-            "last" => $basic->lastName[0]->searchValue,
             "active" => $isActive,
-            "entityId" => $basic->entityId[0]->searchValue,
-            "nsid" => $basic->internalId[0]->searchValue->internalId,
-            "tick" => 1,
-            "status" => ($isActive) ? 'NC' : 'D'
+            "name" => $basic->entityId[0]->searchValue,
+            "nsid" => $basic->internalId[0]->searchValue->internalId
         ];
     }
 
