@@ -27,7 +27,5 @@ class AppServiceProvider extends ServiceProvider
     {
         BadgerAccount::observe(BadgerAccountObserver::class);
         BadgerAccount::observe(ModelObserver::class);
-        SalesRep::observe(ModelObserver::class);
-        SalesRep::observe(SalesRepObserver::class);
     }
 }

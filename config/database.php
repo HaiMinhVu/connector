@@ -32,22 +32,6 @@ return [
     */
 
     'connections' => [
-
-        'badgeraccounts' => [
-            'driver' => 'sqlite',
-            'database' => env('DB_BADGERACCOUNTS_LOCATION')
-        ],
-
-        'custom_entity_fields' => [
-            'driver' => 'sqlite',
-            'database' => env('DB_CUSTOMENTITYFIELDS_LOCATION')
-        ],
-
-        'main' => [
-            'driver' => 'sqlite',
-            'database' => env('DB_MAIN_LOCATION')
-        ],
-
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
@@ -66,16 +50,6 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
-        ],
-
-        'nsconnector' => [
-            'driver' => 'sqlite',
-            'database' => env('DB_NSCONNECTOR_LOCATION')
-        ],
-
-        'salesreps' => [
-            'driver' => 'sqlite',
-            'database' => env('DB_SALESREPS_LOCATION')
         ]
 
     ],

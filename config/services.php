@@ -16,11 +16,6 @@ return [
         'role' => env('NETSUITE_ROLE'),
         'account' => env('NETSUITE_ACCOUNT'),
         'app_id' => env('NETSUITE_APP_ID')
-    ],
-
-    'sellmark' => [
-        'endpoint' => env('SLMK_API_ENDPOINT'),
-        'token' => env('SLMK_API_TOKEN')
     ]
 
 ];

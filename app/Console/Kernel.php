@@ -16,8 +16,7 @@ class Kernel extends ConsoleKernel
         Commands\PushData::class,
         Commands\SyncBadgerAccounts::class,
         Commands\SyncBadgerCheckins::class,
-        Commands\SyncSalesReps::class,
-        Commands\SyncProducts::class
+        Commands\SyncSalesReps::class
     ];
 
     /**

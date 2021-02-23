@@ -50,7 +50,7 @@ class PushData extends Command
      *
      * @var string
      */
-    protected $description = "Push Netsuite Data";
+    protected $description = "Push data to ftp folder";
 
     public function __construct()
     {
