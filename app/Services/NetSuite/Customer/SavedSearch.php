@@ -78,7 +78,7 @@ class SavedSearch extends Service {
         $this->request->pageIndex = $page;
     }
 
-    public function search($page) {
+    public function search($page = 1) {
         if($page == 1) {
             $this->setInitialRequest();
             $response = $this->service->search($this->request);

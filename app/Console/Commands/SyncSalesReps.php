@@ -63,7 +63,6 @@ class SyncSalesReps extends Command
             $this->updateAccounts();
             $this->info('Update complete');
         } catch(\Exception $e) {
-            // $this->error($e->getMessage());
             $this->handleAction();
         }
     }
@@ -74,7 +73,7 @@ class SyncSalesReps extends Command
             try {
                 SalesRep::updateOrCreate(['nsid' => $account['nsid']], $account);
             } catch(\Exception $e) {
-                // $this->error($e->getMessage());
+                $this->error($e->getMessage());
             }
         });
     }

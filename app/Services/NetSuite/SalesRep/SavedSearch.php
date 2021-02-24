@@ -31,6 +31,7 @@ class SavedSearch extends Service {
     {
         parent::__construct();
         $this->init();
+        $this->setRequest();
     }
 
     public function init()
@@ -59,11 +60,7 @@ class SavedSearch extends Service {
 
     public function search()
     {
-        $response = Cache::remember($this->getCacheId(), self::CACHE_SECONDS, function() {
-            $this->setRequest();
-            return $this->service->search($this->request);
-        });
-
+        $response = $this->service->search($this->request);
         $results = collect($response->searchResult->searchRowList->searchRow);
         return $this->parse($results);
     }
