@@ -50,8 +50,8 @@ class Badger {
         if(!empty($data)){
             $this->createCSVFile($data);
             $this->uploadViaFTP();
+            $this->deleteFile("{$this->fileName}.csv");
         }
-        $this->deleteFile("{$this->fileName}.csv");
     }
 
     public function exportCustomers($fromDate = null)
