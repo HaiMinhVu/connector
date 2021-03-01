@@ -22,7 +22,7 @@ class Badger {
     public function __construct()
     {
         $this->setupClient();
-        $this->fileName = Carbon::now()->format('Y_m_d_Hi');
+        $this->fileName = Carbon::now()->format('Y_m_d');
     }
 
     private function setupClient()
@@ -51,6 +51,7 @@ class Badger {
             $this->createCSVFile($data);
             $this->uploadViaFTP();
         }
+        $this->deleteFile("{$this->fileName}.csv");
     }
 
     public function exportCustomers($fromDate = null)
