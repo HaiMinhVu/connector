@@ -50,9 +50,11 @@ class Badger {
 
     public function export($data)
     {
-        $this->createCSVFile($data);
-        $this->uploadViaFTP();
-        $this->deleteFile("{$this->fileName}.csv");
+        if(!empty($data)){
+            $this->createCSVFile($data);
+            $this->uploadViaFTP();
+            $this->deleteFile("{$this->fileName}.csv");
+        }
     }
 
     public function exportCustomers($fromDate = null)
@@ -171,7 +173,7 @@ class Badger {
         }
         if($processedAll){
             echo " Proceeded".PHP_EOL;
-            // $this->deleteFile($filename);
+            $this->deleteFile($filename);
         }
     }
 
