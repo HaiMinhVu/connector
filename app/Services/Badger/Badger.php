@@ -49,7 +49,7 @@ class Badger {
     {
         if(!empty($data)){
             $this->createCSVFile($data);
-            // $this->uploadViaFTP();
+            $this->uploadViaFTP();
         }
     }
 
@@ -88,7 +88,7 @@ class Badger {
             $file = File::get($this->localFile());
             $this->ftpClient->put($this->remoteFile(), $file);
         } catch (\Exception $e) {
-            // dd($e->getMessage());
+            dd($e->getMessage());
         }
     }
 
@@ -102,6 +102,10 @@ class Badger {
         return self::REMOTE_UPLOAD_PATH."/{$this->fileName}.csv";
     }
 
+    private function deleteFile($filename)
+    {
+        Storage::disk('local')->delete($filename);
+    }
 
 
 
@@ -164,7 +168,7 @@ class Badger {
         }
         if($processedAll){
             echo " Saved all".PHP_EOL;
-            // $this->deleteFile($filename);
+            $this->deleteFile($filename);
         }
     }
 
