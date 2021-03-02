@@ -104,6 +104,7 @@ class SyncBadgerAccounts extends Command
 
     private function pushToBadger($fromDate)
     {
+        $this->info("Pushing to Badger");
         $this->badgerService->exportCustomers($fromDate);
     }
 

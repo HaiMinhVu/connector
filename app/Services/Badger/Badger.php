@@ -143,18 +143,18 @@ class Badger {
         }
     }
 
-    private function getAllFilenames(){
-        return array_filter(Storage::disk('local')->files(), function ($item) {
-            return strpos($item, '.csv');
-        });
-    }
-
     public function insertCheckins(){
         $filenames = $this->getAllFilenames();
         foreach ($filenames as $filename) {
             $file = Storage::disk('local')->get($filename);
             $this->processFile($filename);
         }
+    }
+
+    private function getAllFilenames(){
+        return array_filter(Storage::disk('local')->files(), function ($item) {
+            return strpos($item, '.csv');
+        });
     }
 
     private function processFile($filename){

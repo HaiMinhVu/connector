@@ -24,7 +24,7 @@ class SyncBadgerCheckins extends Command
 
     public function handle()
     {
-        // $this->badgerService->downloadCheckins();
+        $this->badgerService->downloadCheckins();
         // $this->badgerService->insertCheckins();
         // $this->badgerCheckin->syncCheckins();
     }
