@@ -122,10 +122,8 @@ class Badger {
     }
 
     private function downloadFromRemote($filename){
-        echo 'Downloading '.$filename;
         try{
             if(Storage::disk('local')->put($filename, $this->ftpClient->get(self::REMOTE_DOWNLOAD_PATH.$filename))){
-                echo " Downloaded".PHP_EOL;
                 $this->deleteOnRemote($filename);
             }
         } catch(\Exception $e) {
@@ -134,9 +132,7 @@ class Badger {
     }
 
     private function deleteOnRemote($filename){
-        if($this->ftpClient->delete(self::REMOTE_DOWNLOAD_PATH.$filename, false)){
-            echo "Deleted on remote: ".$filename.PHP_EOL;
-        }
+        $this->ftpClient->delete(self::REMOTE_DOWNLOAD_PATH.$filename, false)){
     }
 
     private function getAllFilenames(){
@@ -154,7 +150,6 @@ class Badger {
     }
 
     private function processFile($filename){
-        echo "Saving to database ".$filename;
         $file = fopen('storage/app/'.$filename, 'r');
         $processedAll = 1;
         $firstline = TRUE;
@@ -168,7 +163,6 @@ class Badger {
             }
         }
         if($processedAll){
-            echo " Saved all".PHP_EOL;
             $this->deleteFile($filename);
         }
     }
