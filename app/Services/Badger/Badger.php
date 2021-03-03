@@ -53,7 +53,7 @@ class Badger {
         if(!empty($data)){
             $this->createCSVFile($data);
             $this->uploadViaFTP();
-            $this->deleteFile("{$this->fileName}.csv");
+            $this->deleteLocalFile("{$this->fileName}.csv");
         }
     }
 
@@ -106,7 +106,7 @@ class Badger {
         return self::REMOTE_UPLOAD_PATH."/{$this->fileName}.csv";
     }
 
-    private function deleteFile($filename)
+    private function deleteLocalFile($filename)
     {
         Storage::disk('local')->delete($filename);
     }
@@ -115,7 +115,7 @@ class Badger {
 
 
     
-
+    /******************* CHECK-INS ********************/
     public function downloadCheckins(){
         $files = $this->ftpClient->nlist(self::REMOTE_DOWNLOAD_PATH);
         foreach ($files as $filename) {
@@ -126,10 +126,8 @@ class Badger {
     }
 
     private function downloadFromRemote($filename){
-        echo 'Downloading '.$filename;
         try{
             if(Storage::disk('local')->put($filename, $this->ftpClient->get(self::REMOTE_DOWNLOAD_PATH.$filename))){
-                echo " Downloaded".PHP_EOL;
                 $this->deleteOnRemote($filename);
             }
         } catch(\Exception $e) {
@@ -158,7 +156,6 @@ class Badger {
     }
 
     private function processFile($filename){
-        echo "Processing File ".$filename;
         $file = fopen('storage/app/'.$filename, 'r');
         $processedAll = 1;
         $firstline = TRUE;
@@ -172,8 +169,7 @@ class Badger {
             }
         }
         if($processedAll){
-            echo " Proceeded".PHP_EOL;
-            $this->deleteFile($filename);
+            $this->deleteLocalFile($filename);
         }
     }
 

@@ -102,6 +102,7 @@ class PushData extends Command
 
     private function handleMessages() : void
     {
+        $this->info('Sending file to remote disk');
         foreach($this->messages as $message) {
             $this->parseMessage($message);
         }
@@ -117,6 +118,7 @@ class PushData extends Command
 
     private function saveAttachment(?Attachment $attachment) : bool
     {
+
         if($attachment) {
             return Storage::disk($this->remoteStorageDisk)->put($this->generateFileName($attachment), $attachment->getDecodedContent());
         }

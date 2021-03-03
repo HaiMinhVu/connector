@@ -35,8 +35,9 @@ class Checkin extends Service {
 
     public function syncCheckins()
     {
+        return 'not running until badger fix internal ID';
         // return $this->checkins;
-        return $this->processCheckin($this->checkins[0]);
+        // return $this->processCheckin($this->checkins[0]);
         // foreach ($this->checkins as $checkin) {
         //     $this->processCheckin($checkin);
         // }

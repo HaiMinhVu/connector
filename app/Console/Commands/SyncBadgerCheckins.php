@@ -24,9 +24,43 @@ class SyncBadgerCheckins extends Command
 
     public function handle()
     {
-        $this->badgerService->downloadCheckins();
-        // $this->badgerService->insertCheckins();
-        // $this->badgerCheckin->syncCheckins();
+        $this->info('Downloading check-ins from badger');
+        $this->downloadCheckins();
+        $this->info('Inserting check-ins to database');
+        $this->insertCheckins();
+        $this->info('Pushing check-ins to NetSuite');
+        $this->syncCheckins();
+    }
+
+    private function downloadCheckins()
+    {
+        try {
+            $this->badgerService->downloadCheckins();
+        } catch(\Exception $e) {
+            $this->info("Retrying Downloading check-ins from badger");
+            $this->downloadCheckins();
+        }
+    }
+
+    private function insertCheckins()
+    {
+        try {
+            $this->badgerService->insertCheckins();
+            return true;
+        } catch(\Exception $e) {
+            $this->info("Retrying Inserting check-ins to database");
+            $this->insertCheckins();
+        }
+    }
+
+    private function syncCheckins()
+    {
+        try {
+            $this->badgerCheckin->syncCheckins();
+        } catch(\Exception $e) {
+            $this->info("Retrying Pushing check-ins to NetSuite");
+            $this->syncCheckins();
+        }
     }
     
 }
