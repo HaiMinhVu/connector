@@ -45,6 +45,7 @@ class SyncBadgerCheckins extends Command
     {
         try {
             $this->badgerService->insertCheckins();
+            return true;
         } catch(\Exception $e) {
             $this->info("Retrying Inserting check-ins to database");
             $this->insertCheckins();
