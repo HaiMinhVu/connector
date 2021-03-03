@@ -132,7 +132,7 @@ class Badger {
     }
 
     private function deleteOnRemote($filename){
-        $this->ftpClient->delete(self::REMOTE_DOWNLOAD_PATH.$filename, false));
+        $this->ftpClient->delete(self::REMOTE_DOWNLOAD_PATH.$filename, false);
     }
 
     private function getAllFilenames(){
