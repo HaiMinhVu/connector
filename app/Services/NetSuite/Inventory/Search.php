@@ -3,6 +3,8 @@
 namespace App\Services\NetSuite\Inventory;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 use App\Services\NetSuite\Service;
 use NetSuite\Classes\{
     SearchBooleanField,
@@ -11,24 +13,28 @@ use NetSuite\Classes\{
     SearchMoreWithIdRequest,
     SearchDateField,
     SearchDateFieldOperator,
-    RecordRef
+    RecordRef,
+
+    PricingMatrix
 };
+
 use Closure;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\NetsuiteProduct;
 
 class Search extends Service {
 
-    const FROM_DATE = '2015-01-01';
     const PER_PAGE = 200;
-    const CACHE_TIMEOUT = 300;
+    const NS_PRODUCT_DATEFORMAT = 'm/d/Y';
+    const APP_TIMEZONE = "America/Chicago";
+
     const CUSTOM_FIELD_MAP = [
         ['label' => 'eccn', 'id' => 1],
-        ['label' => 'end_date', 'id' => 6],
-        ['label' => 'netsuite_category', 'id' => 2],
-        ['label' => 'ccats', 'id' => 10],
-        ['label' => 'product_sizing', 'id' => 9],
-        ['label' => 'start_date', 'id' => 5]
+        ['label' => 'endDate', 'id' => 96],
+        ['label' => 'netsuiteCategory', 'id' => 2],
+        ['label' => 'ccats', 'id' => 441],
+        ['label' => 'productSizing', 'id' => 440],
+        ['label' => 'startDate', 'id' => 95]
     ];
 
     protected $previousSearchId;
@@ -37,21 +43,48 @@ class Search extends Service {
     protected $request;
     protected $response;
     protected $page = 1;
+    protected $fromDate;
 
-    public function __construct()
+    public function __construct(string $fromDate = null)
     {
         parent::__construct();
-        $this->init();
+        if($fromDate) {
+            $this->setFromDate($fromDate);
+        }
     }
 
-    public function search(Closure $callback) {
+    // public function search(Closure $callback) {
+    //     if(!$this->fromDate) {
+    //         $this->setFromDate();
+    //     }
+    //     do {
+    //         $records = $this->searchAction();
+    //         if($records) {
+    //             $callback($records);
+    //         }
+    //     } while($this->inLoop());
+    // }
 
+    public function search() {
+        if(!$this->fromDate) {
+            $this->setFromDate();
+        }
         do {
-            $records = $this->searchAction();
-            if($records) {
-                $callback($records);
-            }
+            $tmp = $this->searchAction();
+            dd($tmp[0]);
+            // $records = $this->searchAction();
+            // if($records) {
+            //     $callback($records);
+            // }
         } while($this->inLoop());
+    }
+
+
+    public function setFromDate($dateString = null)
+    {
+        $this->fromDate = ($dateString) ? (new \DateTime($dateString))->format('c') : (new \DateTime())->sub(new \DateInterval('P1D'))->format('c');
+        $this->setParameters();
+        $this->init();
     }
 
     protected function searchAction()
@@ -60,39 +93,30 @@ class Search extends Service {
             $response = $this->runSearch();
             return $this->handleResponse($response);
         } catch(\Exception $e) {
+            print_r($e->getMessage());
             $this->searchAction();
         }
     }
 
     private function runSearch()
     {
-   	    if($this->page > 1) {
+        if($this->page > 1) {
             return $this->paginatedSearch($this->request);
         } else {
             return $this->initialSearch($this->request);
         }
     }
 
-    private function getCacheId()
-    {
-        $perPage = self::PER_PAGE;
-        return "inventory_search_{$perPage}_{$this->page}";
-    }
-
     public function initialSearch()
     {
-        return Cache::remember($this->getCacheId(), self::CACHE_TIMEOUT, function(){
-            return $this->service->search($this->request);
-        });
+        return $this->service->search($this->request);
     }
 
     public function paginatedSearch()
     {
         if($this->inLoop()) {
             $this->setPaginatedRequest();
-            return Cache::remember($this->getCacheId(), self::CACHE_TIMEOUT, function(){
-                return $this->service->searchMoreWithId($this->request);
-            });
+            return $this->service->searchMoreWithId($this->request);
         }
     }
 
@@ -119,11 +143,11 @@ class Search extends Service {
         $searchBooleanField = new SearchBooleanField();
         $searchBooleanField->searchValue = true;
         $searchDateField = new SearchDateField();
-        $searchDateField->searchValue = (new \DateTime(self::FROM_DATE))->getTimestamp();
+        $searchDateField->searchValue = $this->fromDate;
         $searchDateField->operator = SearchDateFieldOperator::onOrAfter;
         $this->search = new ItemSearchBasic;
         $this->search->isAvailable = $searchBooleanField;
-        $this->search->created = $searchDateField;
+        $this->search->lastModifiedDate = $searchDateField;
         $this->service->setSearchPreferences(false, self::PER_PAGE);
     }
 
@@ -163,14 +187,119 @@ class Search extends Service {
         return true;
     }
 
-    private function getCustomFieldLabel($id)
+
+
+
+
+
+
+
+    public function parseRecords($records)
+    {
+        // return $records;
+        $records = collect($records);
+        return $records->map(function($record){
+            $pricing = optional($this->parsePricing($record->pricingMatrix));
+            $quantity = optional($this->parseQuantities($record->locationsList));
+            $customFields = optional($this->parseCustomFields($record->customFieldList));
+            return [
+                "nsid" => $record->internalId,
+                "active_in_webstore" => $record->isOnline ? "Yes" : "No",
+                "inactive" => $record->isInactive ? "Yes" : "No",
+                "ns_product_category" => $customFields['netsuiteCategory'],
+                "startdate" => $this->parseTime($customFields['startDate']),
+                "enddate" => $this->parseTime($customFields['endDate']),
+                "sku" => $record->itemId ?? '',
+                "featured_description" => $record->salesDescription ?? '',
+                "UPC" => $record->upcCode ?? '',
+                "description" => $record->purchaseDescription ?? '',
+                "ECCN" => $customFields['eccn'],
+                "CCATS" => $customFields['ccats'],
+                "online_price" => $pricing['onlinePrice'],
+                "map" => $pricing['map'],
+                "total_quantity_on_hand" => array_sum($quantity['total_quantity_on_hand']),
+                "taxable" => $record->isTaxable ? 'Yes' : 'No',
+                "weight" => $record->weight ?? 0.00,
+                "weight_units" => str_replace('_', '', $record->weightUnit),
+                "authdealerprice" => $pricing['authorizedDealer'],
+                "buyinggroupprice" => $pricing['buyingGroup'],
+                "dealerprice" => $pricing['dealer'],
+                "dealerdistprice" => $pricing['dealerDistributor'],
+                "disprice" => $pricing['distributor'],
+                "dropshipprice" => $pricing['dropShip'],
+                "govprice" => $pricing['government'],
+                "msrp" => $pricing['msrp'],
+                "specials" => $pricing['specials'],
+                "onlineprice" => $pricing['onlinePrice'],
+                "backordered" => array_sum($quantity['backordered']),
+                "product_sizing" => $customFields['productSizing'],
+
+            ];
+        });
+        
+        // return NetsuiteProduct::collection($records);
+    }
+
+
+    private static function parseTime($timeString)
+    {
+        if($timeString) {
+            return Carbon::parse($timeString)->setTimezone(self::APP_TIMEZONE)->format(self::NS_PRODUCT_DATEFORMAT);
+        }
+        return '';
+    }
+
+    private function parsePricing($pricingMatrix)
+    {
+        if($pricingMatrix instanceof PricingMatrix) {
+            $pricingMatrix = collect($pricingMatrix->pricing)->mapWithKeys(function($price){
+                $key = Str::camel(strtolower($price->priceLevel->name));
+                $value = $price->priceList->price[0]->value;
+                return [$key => $value];
+            })->toArray();
+            return $pricingMatrix;
+        }
+        return [];
+    }
+
+    private function parseQuantities($locationsList)
+    {
+        $quantityOnHand = collect($locationsList->locations)->mapWithKeys(function($location){
+            $key = $location->location;
+            $value = $location->quantityOnHand ?? 0.0;
+            return [$key => $value];
+        })->toArray();
+
+        $quantityBackOrdered = collect($locationsList->locations)->mapWithKeys(function($location){
+            $key = $location->location;
+            $value = $location->quantityBackOrdered ?? 0.0;
+            return [$key => $value];
+        })->toArray();
+
+        return [
+            'total_quantity_on_hand' => $quantityOnHand,
+            'backordered' => $quantityBackOrdered
+        ];
+    }
+
+    private function getCustomFieldLabel($id) 
     {
         $customField = collect(self::CUSTOM_FIELD_MAP)->firstWhere('id', $id);
         return optional($customField)['label'];
     }
 
-    public function parseRecords($records)
+    private function parseCustomFields($customFieldList)
     {
-        return NetsuiteProduct::collection($records);
+        return collect($customFieldList->customField)->mapWithKeys(function($customField){
+            $k = $this->getCustomFieldLabel($customField->internalId);
+            $v = $customField->value;
+            if($k == 'netsuiteCategory') {
+                $v = $v->name;
+            }
+            return [$k => $v];
+        })->filter(function($customField, $key){
+            return $key != '';
+        })->toArray();
     }
+
 }

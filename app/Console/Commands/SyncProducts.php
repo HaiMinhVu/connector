@@ -32,7 +32,7 @@ class SyncProducts extends Command
      *
      * @var string
      */
-    protected $signature = "sync:products";
+    protected $signature = "sync:products {--from-date= : Specify the last modified date for results}";
 
     /**
      * The console command description.
@@ -59,14 +59,27 @@ class SyncProducts extends Command
             'headers' => ['X-Api-Key' => config('services.sellmark.token')]
         ]);
 
-        $this->inventorySearch->search(function($records) use ($client) {
-            try {
-                $res = $client->post('products/netsuite', ['json' => $records]);
-                $currentPage = $this->inventorySearch->getLastPage();
-                $this->info("Page: {$currentPage}/{$this->inventorySearch->getTotalPages()}");
-            } catch(\Exception $e) {
-                $this->error($e->getMessage());
-            }
-        });
+        $this->setFromDate();
+
+        $this->inventorySearch->search();
+        // $this->inventorySearch->search(function($records) use ($client) {
+        //     // try {
+        //     //     $res = $client->post('products/netsuite', ['json' => $records]);
+        //     //     $currentPage = $this->inventorySearch->getLastPage();
+        //     //     $this->info("Page: {$currentPage}/{$this->inventorySearch->getTotalPages()}");
+        //     // } catch(\Exception $e) {
+        //     //     $this->error($e->getMessage());
+        //     // }
+        //     $data = optional($records);
+        //     dd($data->resource->createdDate);
+        // });
     }
+
+    private function setFromDate()
+    {
+        if($this->option('from-date') !== null) {
+            $this->inventorySearch->setFromDate($this->option('from-date'));
+        }
+    }
+
 }
