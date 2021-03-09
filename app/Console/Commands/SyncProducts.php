@@ -52,6 +52,7 @@ class SyncProducts extends Command
      *
      * @return mixed
      */
+
     public function handle()
     {
         $client = new \GuzzleHttp\Client([
@@ -61,18 +62,15 @@ class SyncProducts extends Command
 
         $this->setFromDate();
 
-        $this->inventorySearch->search();
-        // $this->inventorySearch->search(function($records) use ($client) {
-        //     // try {
-        //     //     $res = $client->post('products/netsuite', ['json' => $records]);
-        //     //     $currentPage = $this->inventorySearch->getLastPage();
-        //     //     $this->info("Page: {$currentPage}/{$this->inventorySearch->getTotalPages()}");
-        //     // } catch(\Exception $e) {
-        //     //     $this->error($e->getMessage());
-        //     // }
-        //     $data = optional($records);
-        //     dd($data->resource->createdDate);
-        // });
+        $this->inventorySearch->search(function($records) use ($client) {
+            try {
+                // $res = $client->post('products/netsuite', ['json' => $records]);
+                $currentPage = $this->inventorySearch->getLastPage();
+                $this->info("Page: {$currentPage}/{$this->inventorySearch->getTotalPages()}");
+            } catch(\Exception $e) {
+                $this->error($e->getMessage());
+            }
+        });
     }
 
     private function setFromDate()

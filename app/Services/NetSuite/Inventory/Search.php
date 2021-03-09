@@ -15,13 +15,14 @@ use NetSuite\Classes\{
     SearchDateFieldOperator,
     RecordRef,
 
-    PricingMatrix
+    PricingMatrix,
+    CustomFieldList
 };
 
 use Closure;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\NetsuiteProduct;
-
+use Log;
 class Search extends Service {
 
     const PER_PAGE = 200;
@@ -53,32 +54,17 @@ class Search extends Service {
         }
     }
 
-    // public function search(Closure $callback) {
-    //     if(!$this->fromDate) {
-    //         $this->setFromDate();
-    //     }
-    //     do {
-    //         $records = $this->searchAction();
-    //         if($records) {
-    //             $callback($records);
-    //         }
-    //     } while($this->inLoop());
-    // }
-
-    public function search() {
+    public function search(Closure $callback) {
         if(!$this->fromDate) {
             $this->setFromDate();
         }
         do {
-            $tmp = $this->searchAction();
-            dd($tmp[0]);
-            // $records = $this->searchAction();
-            // if($records) {
-            //     $callback($records);
-            // }
+            $records = $this->searchAction();
+            if($records) {
+                $callback($records);
+            }
         } while($this->inLoop());
     }
-
 
     public function setFromDate($dateString = null)
     {
@@ -122,12 +108,14 @@ class Search extends Service {
 
     protected function handleResponse($response)
     {
-        $searchResult = $response->searchResult;
-        if($searchResult->status->isSuccess) {
-            $this->totalPages = $searchResult->totalPages;
-            $this->previousSearchId = $searchResult->searchId;
-            $this->page = $searchResult->pageIndex+1;
-            return $this->parseRecords($searchResult->recordList->record);
+        if($response){
+            $searchResult = $response->searchResult;
+            if($searchResult->status->isSuccess) {
+                $this->totalPages = $searchResult->totalPages;
+                $this->previousSearchId = $searchResult->searchId;
+                $this->page = $searchResult->pageIndex+1;
+                return $this->parseRecords($searchResult->recordList->record);
+            }
         }
         return null;
     }
@@ -187,57 +175,53 @@ class Search extends Service {
         return true;
     }
 
-
-
-
-
-
-
-
     public function parseRecords($records)
     {
-        // return $records;
+
         $records = collect($records);
         return $records->map(function($record){
-            $pricing = optional($this->parsePricing($record->pricingMatrix));
-            $quantity = optional($this->parseQuantities($record->locationsList));
-            $customFields = optional($this->parseCustomFields($record->customFieldList));
-            return [
-                "nsid" => $record->internalId,
-                "active_in_webstore" => $record->isOnline ? "Yes" : "No",
-                "inactive" => $record->isInactive ? "Yes" : "No",
-                "ns_product_category" => $customFields['netsuiteCategory'],
-                "startdate" => $this->parseTime($customFields['startDate']),
-                "enddate" => $this->parseTime($customFields['endDate']),
-                "sku" => $record->itemId ?? '',
-                "featured_description" => $record->salesDescription ?? '',
-                "UPC" => $record->upcCode ?? '',
-                "description" => $record->purchaseDescription ?? '',
-                "ECCN" => $customFields['eccn'],
-                "CCATS" => $customFields['ccats'],
-                "online_price" => $pricing['onlinePrice'],
-                "map" => $pricing['map'],
-                "total_quantity_on_hand" => array_sum($quantity['total_quantity_on_hand']),
-                "taxable" => $record->isTaxable ? 'Yes' : 'No',
-                "weight" => $record->weight ?? 0.00,
-                "weight_units" => str_replace('_', '', $record->weightUnit),
-                "authdealerprice" => $pricing['authorizedDealer'],
-                "buyinggroupprice" => $pricing['buyingGroup'],
-                "dealerprice" => $pricing['dealer'],
-                "dealerdistprice" => $pricing['dealerDistributor'],
-                "disprice" => $pricing['distributor'],
-                "dropshipprice" => $pricing['dropShip'],
-                "govprice" => $pricing['government'],
-                "msrp" => $pricing['msrp'],
-                "specials" => $pricing['specials'],
-                "onlineprice" => $pricing['onlinePrice'],
-                "backordered" => array_sum($quantity['backordered']),
-                "product_sizing" => $customFields['productSizing'],
-
-            ];
+            // if(!$record->locationsList){
+            //     Log::info($record->internalId);
+            // }
+            Log::info($record->internalId);
+            Log::info(print_r($record->locationsList->locations[0],1));
+            
+            // $pricing = optional($this->parsePricing($record->pricingMatrix));
+            // $quantity = optional($this->parseQuantities($record->locationsList));
+            // $customFields = optional($this->parseCustomFields($record->customFieldList));
+            // return [
+            //     "nsid" => $record->internalId,
+            //     "active_in_webstore" => $record->isOnline ? "Yes" : "No",
+            //     "inactive" => $record->isInactive ? "Yes" : "No",
+            //     "ns_product_category" => $customFields['netsuiteCategory'],
+            //     "startdate" => $this->parseTime($customFields['startDate']),
+            //     "enddate" => $this->parseTime($customFields['endDate']),
+            //     "sku" => $record->itemId ?? '',
+            //     "featured_description" => $record->salesDescription ?? '',
+            //     "UPC" => $record->upcCode ?? '',
+            //     "description" => $record->purchaseDescription ?? '',
+            //     "ECCN" => $customFields['eccn'] ?? '',
+            //     "CCATS" => $customFields['ccats'] ?? '',
+            //     "online_price" => $pricing['onlinePrice'] ?? '',
+            //     "map" => $pricing['map'] ?? '',
+            //     "total_quantity_on_hand" => array_sum($quantity['total_quantity_on_hand']),
+            //     "taxable" => $record->isTaxable ? 'Yes' : 'No',
+            //     "weight" => $record->weight ?? 0.00,
+            //     "weight_units" => is_string($record->weightUnit) ? str_replace('_', '', $record->weightUnit) : '',
+            //     "authdealerprice" => $pricing['authorizedDealer'] ?? '',
+            //     "buyinggroupprice" => $pricing['buyingGroup'] ?? '',
+            //     "dealerprice" => $pricing['dealer'] ?? '',
+            //     "dealerdistprice" => $pricing['dealerDistributor'] ?? '',
+            //     "disprice" => $pricing['distributor'] ?? '',
+            //     "dropshipprice" => $pricing['dropShip'] ?? '',
+            //     "govprice" => $pricing['government'] ?? '',
+            //     "msrp" => $pricing['msrp'] ?? '',
+            //     "specials" => $pricing['specials'] ?? '',
+            //     "onlineprice" => $pricing['onlinePrice'] ?? '',
+            //     "backordered" => array_sum($quantity['backordered']),
+            //     "product_sizing" => $customFields['productSizing'] ?? '',
+            // ];
         });
-        
-        // return NetsuiteProduct::collection($records);
     }
 
 
@@ -264,18 +248,13 @@ class Search extends Service {
 
     private function parseQuantities($locationsList)
     {
-        $quantityOnHand = collect($locationsList->locations)->mapWithKeys(function($location){
+        $quantityOnHand = [];
+        $quantityBackOrdered = [];
+        foreach($locationsList->locations as $location) {
             $key = $location->location;
-            $value = $location->quantityOnHand ?? 0.0;
-            return [$key => $value];
-        })->toArray();
-
-        $quantityBackOrdered = collect($locationsList->locations)->mapWithKeys(function($location){
-            $key = $location->location;
-            $value = $location->quantityBackOrdered ?? 0.0;
-            return [$key => $value];
-        })->toArray();
-
+            $quantityOnHand[$key] = $location->quantityOnHand ?? 0.0;
+            $quantityBackOrdered[$key] = $location->quantityBackOrdered ?? 0.0;
+        }
         return [
             'total_quantity_on_hand' => $quantityOnHand,
             'backordered' => $quantityBackOrdered
@@ -290,16 +269,19 @@ class Search extends Service {
 
     private function parseCustomFields($customFieldList)
     {
-        return collect($customFieldList->customField)->mapWithKeys(function($customField){
-            $k = $this->getCustomFieldLabel($customField->internalId);
-            $v = $customField->value;
-            if($k == 'netsuiteCategory') {
-                $v = $v->name;
-            }
-            return [$k => $v];
-        })->filter(function($customField, $key){
-            return $key != '';
-        })->toArray();
+        if($customFieldList instanceof CustomFieldList) {
+            return collect($customFieldList->customField)->mapWithKeys(function($customField){
+                $k = $this->getCustomFieldLabel($customField->internalId);
+                $v = $customField->value;
+                if($k == 'netsuiteCategory') {
+                    $v = $v->name;
+                }
+                return [$k => $v];
+            })->filter(function($customField, $key){
+                return $key != '';
+            })->toArray();
+        }
+        return [];
     }
 
 }
