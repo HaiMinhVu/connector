@@ -181,7 +181,7 @@ class Search extends Service {
         $records = collect($records);
         return $records->filter(function($record){
                 return isset($record->locationsList);
-            })->map(function($record){           
+            })->map(function($record){   
                 $pricing = optional($this->parsePricing($record->pricingMatrix));
                 $quantity = optional($this->parseQuantities($record->locationsList));
                 $customFields = optional($this->parseCustomFields($record->customFieldList));
@@ -200,7 +200,7 @@ class Search extends Service {
                     "CCATS" => $customFields['ccats'] ?? '',
                     "online_price" => $pricing['onlinePrice'] ?? '',
                     "map" => $pricing['map'] ?? '',
-                    "total_quantity_on_hand" => array_sum($quantity['total_quantity_on_hand']),
+                    "total_quantity_on_hand" => array_sum($quantity['total_quantity_on_hand']['Warehouse']),
                     "taxable" => $record->isTaxable ? 'Yes' : 'No',
                     "weight" => $record->weight ?? 0.00,
                     "weight_units" => is_string($record->weightUnit) ? str_replace('_', '', $record->weightUnit) : '',
@@ -214,7 +214,7 @@ class Search extends Service {
                     "msrp" => $pricing['msrp'] ?? '',
                     "specials" => $pricing['specials'] ?? '',
                     "onlineprice" => $pricing['onlinePrice'] ?? '',
-                    "backordered" => array_sum($quantity['backordered']),
+                    "backordered" => array_sum($quantity['backordered']['Warehouse']),
                     "product_sizing" => $customFields['productSizing'] ?? '',
                 ];
             });
@@ -244,15 +244,15 @@ class Search extends Service {
 
     private function parseQuantities($locationsList)
     {
-        $quantityOnHand = [];
+        $quantityAvailable = [];
         $quantityBackOrdered = [];
         foreach($locationsList->locations as $location) {
             $key = $location->location;
-            $quantityOnHand[$key] = $location->quantityOnHand ?? 0.0;
+            $quantityAvailable[$key] = $location->quantityAvailable ?? 0.0;
             $quantityBackOrdered[$key] = $location->quantityBackOrdered ?? 0.0;
         }
         return [
-            'total_quantity_on_hand' => $quantityOnHand,
+            'total_quantity_on_hand' => $quantityAvailable,
             'backordered' => $quantityBackOrdered
         ];
     }
