@@ -200,7 +200,7 @@ class Search extends Service {
                     "CCATS" => $customFields['ccats'] ?? '',
                     "online_price" => $pricing['onlinePrice'] ?? '',
                     "map" => $pricing['map'] ?? '',
-                    "total_quantity_on_hand" => array_sum($quantity['total_quantity_on_hand']['Warehouse']),
+                    "total_quantity_on_hand" => $quantity['total_quantity_on_hand']['Warehouse'],
                     "taxable" => $record->isTaxable ? 'Yes' : 'No',
                     "weight" => $record->weight ?? 0.00,
                     "weight_units" => is_string($record->weightUnit) ? str_replace('_', '', $record->weightUnit) : '',
@@ -214,7 +214,7 @@ class Search extends Service {
                     "msrp" => $pricing['msrp'] ?? '',
                     "specials" => $pricing['specials'] ?? '',
                     "onlineprice" => $pricing['onlinePrice'] ?? '',
-                    "backordered" => array_sum($quantity['backordered']['Warehouse']),
+                    "backordered" => $quantity['backordered']['Warehouse'],
                     "product_sizing" => $customFields['productSizing'] ?? '',
                 ];
             });
