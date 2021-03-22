@@ -130,7 +130,7 @@ class SyncBadgerAccounts extends Command
             // );
             BadgerAccount::updateOrCreate(
                 ['nsid' => $account['nsid']], 
-                $account)
+                $account
             );
         });
     }
