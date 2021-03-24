@@ -35,17 +35,13 @@ class Checkin extends Service {
 
     public function syncCheckins()
     {
-        return 'not running until badger fix internal ID';
-        // return $this->checkins;
-        // return $this->processCheckin($this->checkins[0]);
-        // foreach ($this->checkins as $checkin) {
-        //     $this->processCheckin($checkin);
-        // }
+        foreach ($this->checkins as $checkin) {
+            $this->processCheckin($checkin);
+        }
     }
 
     private function processCheckin($data){
         echo "Processing ".$data->id;
-        // $this->id = $data->id;
         $data->rep_id = $this->getRepID($data->rep_email);
         if($data->type == 'Phone Call'){
             $this->processPhoneCall($data);
@@ -153,15 +149,15 @@ class Checkin extends Service {
     }
 
     private function pushCheckin($request){
-        // dd($request);
         $addResponse = $this->service->addList($request);
-        // dd($addResponse);
         if ($addResponse->writeResponseList->status->isSuccess ==  true && $addResponse->writeResponseList->writeResponse[0]->status->isSuccess == true) {
             echo " Success.";
             $this->updateCheckin($this->id);
         } else {
-            echo " Error ".$addResponse->writeResponseList->status->statusDetail;
+            echo " Error.";
+            // echo " Error ".$addResponse->writeResponseList->status->statusDetail;
         }
+        echo PHP_EOL;
     }
 
     private function updateCheckin($id){
@@ -171,6 +167,5 @@ class Checkin extends Service {
             return "Failed to Update.";
         }
     }
-
 
 }
