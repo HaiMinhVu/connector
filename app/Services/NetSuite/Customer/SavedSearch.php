@@ -185,31 +185,4 @@ class SavedSearch extends Service {
             "lastModifiedDate" => $records->lastModifiedDate
         ];
     }
-
-    // public static function getRecordsWithCustom($data) : array
-    // {
-    //     $nsid = $data['nsid'];
-    //     $record = new Record();
-    //     $response = $record->getByNSID($nsid);
-
-    //     $records = $response->readResponse->record;
-    //     $salesRep = SalesRep::where('nsid', $data['SalesRepNSID'])->first();
-    //     $type = optional($records->customFieldList->customField->get('Business Model'));
-    //     $isPerson = $type ? ($type->first() == 'Individual' ? 1 : 0) : 0;
-    //     $contact = optional(self::getContact($records->contactRolesList));
-
-    //     return [
-    //         "_Name" => $records->companyName,
-    //         "_Phone" => preg_replace('/[^0-9]/', '', $records->phone),
-    //         "_AccountOwner" => optional($salesRep)->email,
-    //         "Contact Name" => $contact->name ?? '',
-    //         "Contact Email" => $contact->email ?? '',
-    //         'is Person' => $isPerson,
-    //         "Status" => $records->entityStatus->name,
-    //         "url" => $records->url,
-    //         "category" => $records->customFieldList->customField->get('Account Category'),
-    //         "territory" => optional($records->territory)->name,
-    //         "lastModifiedDate" => $records->lastModifiedDate
-    //     ];
-    // }
 }
