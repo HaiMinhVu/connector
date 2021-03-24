@@ -61,7 +61,12 @@ class Territory {
 
     public function getTerritory($nsid)
     {
-        return $this->territories[$nsid];
+        if(in_array($nsid, $this->territories)){
+            return $this->territories[$nsid];
+        }
+        else{
+            return '';
+        }
     }
 
 }
