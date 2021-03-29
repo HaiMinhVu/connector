@@ -22,7 +22,7 @@ class Badger {
     public function __construct()
     {
         $this->setupClient();
-        $this->fileName = Carbon::now()->format('Y_m_d');
+        $this->fileName = Carbon::now()->format('Y_m_d_Hi');
     }
 
     private function setupClient()
