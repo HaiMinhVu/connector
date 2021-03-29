@@ -86,7 +86,7 @@ class Checkin extends Service {
         $meeting->allDayEvent = false;
         $meeting->sendEmail = false;
         $meeting->customform = -110;
-        $this->pushCheckin($this->addListRequest($meeting));
+        $this->pushCheckin($this->addListRequest($meeting), $data->id);
     }
 
     private function processPhoneCall($data){
@@ -101,7 +101,7 @@ class Checkin extends Service {
         $phonecall->starttime = $phonecall->endtime = $data->time;
         $phonecall->startDate = date_format(date_create($data->date),DATE_ATOM);
         $phonecall->messageDate = date_format(date_create($data->date),DATE_ATOM);
-        $this->pushCheckin($this->addListRequest($phonecall));
+        $this->pushCheckin($this->addListRequest($phonecall), $data->id);
     }
 
     private function processEmail($data){
@@ -117,7 +117,7 @@ class Checkin extends Service {
         $email->starttime = $email->endtime = $data->time;
         $email->startDate = date_format(date_create($data->date),DATE_ATOM);
         $email->messageDate = date_format(date_create($data->date),DATE_ATOM);
-        $this->pushCheckin($this->addListRequest($email));
+        $this->pushCheckin($this->addListRequest($email), $data->id);
     }
 
     private function processLetter($data){
@@ -133,7 +133,7 @@ class Checkin extends Service {
         $letter->starttime = $letter->endtime = $data->time;
         $letter->startDate = date_format(date_create($data->date),DATE_ATOM);
         $letter->messageDate = date_format(date_create($data->date),DATE_ATOM);
-        $this->pushCheckin($this->addListRequest($letter));
+        $this->pushCheckin($this->addListRequest($letter), $data->id);
     }
 
     private function createRecordRef($internalId){
@@ -148,16 +148,15 @@ class Checkin extends Service {
         return $request;
     }
 
-    private function pushCheckin($request){
+    private function pushCheckin($request, $id){
         $addResponse = $this->service->addList($request);
         if ($addResponse->writeResponseList->status->isSuccess ==  true && $addResponse->writeResponseList->writeResponse[0]->status->isSuccess == true) {
-            echo " Success.";
-            $this->updateCheckin($this->id);
+            echo " Success.".PHP_EOL;
+            $this->updateCheckin($id);
         } else {
             echo " Error.";
             // echo " Error ".$addResponse->writeResponseList->status->statusDetail;
         }
-        echo PHP_EOL;
     }
 
     private function updateCheckin($id){
