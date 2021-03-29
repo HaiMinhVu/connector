@@ -72,7 +72,6 @@ class BadgerAccount extends Model {
 
     public function formatForBadger()
     {
-        if($this->getAttribute("is Person")) dd($this);
         return [
             "_ChangeType" => $this->_ChangeType,
             "_Name" => 	$this->_Name,
