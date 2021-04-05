@@ -51,12 +51,17 @@ class Checkin extends Service {
     private function processCheckin($data){
         echo "Processing ".$data->id;
         $data->rep_id = $this->getRepID($data->rep_email);
-        if(!$this->checkExistingByName($data->account_name) && !$this->checkExistingByNSID($data->customer_id)){
-            try{
-                $data->customer_id = $this->createNewCustomerOnNetsuite($data);
-                $this->createBadgerAccount($data);
-            } catch(\Exception $e) {
-                dd($e);
+        if(!$this->checkExistingByNSID($data->customer_id)){
+            if(!$this->checkExistingByName($data->account_name)){
+                try{
+                    $data->customer_id = $this->createNewCustomerOnNetsuite($data);
+                    $this->createBadgerAccount($data);
+                } catch(\Exception $e) {
+                    dd($e);
+                }
+            }
+            else{
+                $data->customer_id = $this->getBadgerAccountByName($data->account_name);
             }
         }
         if($data->type == 'Phone Call'){
@@ -84,6 +89,11 @@ class Checkin extends Service {
     private function createNewCustomerOnNetsuite($data){
         $customer = new CustomerRecord();
         return $customer->create($data);
+    }
+
+    private function getBadgerAccountByName($data){
+        $account = BadgerAccount::where('company_name', $name)->first();
+        return $account->nsid;
     }
 
     private function createBadgerAccount($data){
@@ -198,6 +208,7 @@ class Checkin extends Service {
             echo " Success.".PHP_EOL;
             $this->updateCheckin($id);
         } else {
+            dd($addResponse);
             echo " Error.";
             // echo " Error ".$addResponse->writeResponseList->status->statusDetail;
         }
