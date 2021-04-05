@@ -17,7 +17,13 @@ use NetSuite\Classes\{
 use App\Models\{
     SalesRep,
     BadgerCheckin,
+    BadgerAccount
 };
+
+use App\Services\NetSuite\Customer\{
+    Record as CustomerRecord
+};
+
 
 class Checkin extends Service {
 
@@ -40,9 +46,19 @@ class Checkin extends Service {
         }
     }
 
+
+
     private function processCheckin($data){
         echo "Processing ".$data->id;
         $data->rep_id = $this->getRepID($data->rep_email);
+        if(!$this->checkExistingByName($data->account_name) && !$this->checkExistingByNSID($data->customer_id)){
+            try{
+                $data->customer_id = $this->createNewCustomerOnNetsuite($data);
+                $this->createBadgerAccount($data);
+            } catch(\Exception $e) {
+                dd($e);
+            }
+        }
         if($data->type == 'Phone Call'){
             $this->processPhoneCall($data);
         }
@@ -57,6 +73,32 @@ class Checkin extends Service {
         }
     }
 
+    private function checkExistingByNSID($nsid) {
+        return BadgerAccount::where('nsid', $nsid)->exists();
+    }
+
+    private function checkExistingByName($name) {
+        return BadgerAccount::where('company_name', $name)->exists();
+    }
+
+    private function createNewCustomerOnNetsuite($data){
+        $customer = new CustomerRecord();
+        return $customer->create($data);
+    }
+
+    private function createBadgerAccount($data){
+        $account = $this->parseBadgerAccountData($data);
+        BadgerAccount::updateOrCreate(['nsid' => $account['nsid']], $account);
+    }
+
+    private function parseBadgerAccountData($data){
+        return [
+            'nsid' => $data->customer_id,
+            'company_name' => $data->account_name,
+            'sale_rep' => $data->rep_email
+        ];
+    }
+
     private function getRepID($rep_email){
         $salerep = SalesRep::where('email', $rep_email)->first();
         if($salerep){
@@ -68,25 +110,30 @@ class Checkin extends Service {
     }
 
     private function processMeeting($data){
+
+
         $meeting = new CalendarEvent();
         $meeting->company = $this->createRecordRef($data->customer_id);
-        $meeting->organizer = $this->createRecordRef($data->rep_id);
-        $meeting->attendeeList = array(
-            $this->createRecordRef($data->rep_id),
-            $this->createRecordRef($data->customer_id)
-        );
-        $meeting->owner = $this->createRecordRef($data->rep_id);
-        $meeting->location = $data->account_address;
-        $meeting->title = "[Badger] Meet with ".$data->account_name;
-        $meeting->message = 'Note: '.$data->note.PHP_EOL.'Decision Maker: '.$data->decision_maker_name. PHP_EOL.'Next Step: '.$data->next_step;
-        $meeting->status = CalendarEventStatus::_tentative; //_cancelled, _completed, _confirmed or _tentative
-        $meeting->accessLevel = CalendarEventAccessLevel::_public; //_public, _private or _showAsBusy
-        $meeting->starttime = $meeting->endtime = $data->time;
-        $meeting->startDate = date_format(date_create($data->date),DATE_ATOM);
-        $meeting->allDayEvent = false;
-        $meeting->sendEmail = false;
-        $meeting->customform = -110;
-        $this->pushCheckin($this->addListRequest($meeting), $data->id);
+        dd($meeting);
+        // $meeting = new CalendarEvent();
+        // $meeting->company = $this->createRecordRef($data->customer_id);
+        // $meeting->organizer = $this->createRecordRef($data->rep_id);
+        // $meeting->attendeeList = array(
+        //     $this->createRecordRef($data->rep_id),
+        //     $this->createRecordRef($data->customer_id)
+        // );
+        // $meeting->owner = $this->createRecordRef($data->rep_id);
+        // $meeting->location = $data->account_address;
+        // $meeting->title = "[Badger] Meet with ".$data->account_name;
+        // $meeting->message = 'Note: '.$data->note.PHP_EOL.'Decision Maker: '.$data->decision_maker_name. PHP_EOL.'Next Step: '.$data->next_step;
+        // $meeting->status = CalendarEventStatus::_tentative; //_cancelled, _completed, _confirmed or _tentative
+        // $meeting->accessLevel = CalendarEventAccessLevel::_public; //_public, _private or _showAsBusy
+        // $meeting->starttime = $meeting->endtime = $data->time;
+        // $meeting->startDate = date_format(date_create($data->date),DATE_ATOM);
+        // $meeting->allDayEvent = false;
+        // $meeting->sendEmail = false;
+        // $meeting->customform = -110;
+        // $this->pushCheckin($this->addListRequest($meeting), $data->id);
     }
 
     private function processPhoneCall($data){
