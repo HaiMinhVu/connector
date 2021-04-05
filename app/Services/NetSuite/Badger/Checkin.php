@@ -91,7 +91,7 @@ class Checkin extends Service {
         return $customer->create($data);
     }
 
-    private function getBadgerAccountByName($data){
+    private function getBadgerAccountByName($name){
         $account = BadgerAccount::where('company_name', $name)->first();
         return $account->nsid;
     }
