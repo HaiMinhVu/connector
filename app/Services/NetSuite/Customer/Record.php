@@ -9,7 +9,7 @@ use NetSuite\Classes\{
     GetRequest,
     RecordRef,
     RecordType,
-
+    Customer
 };
 
 class Record extends Service {
