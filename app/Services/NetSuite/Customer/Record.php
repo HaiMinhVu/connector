@@ -52,7 +52,7 @@ class Record extends Service {
             return $res->writeResponse->baseRef->internalId;
         }
         else{
-            dd('error');
+            dd('Error Creating NS Customer '.$res);
         }
     }
 

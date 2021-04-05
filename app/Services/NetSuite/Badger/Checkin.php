@@ -208,9 +208,7 @@ class Checkin extends Service {
             echo " Success.".PHP_EOL;
             $this->updateCheckin($id);
         } else {
-            dd($addResponse);
-            echo " Error.";
-            // echo " Error ".$addResponse->writeResponseList->status->statusDetail;
+            dd('Error Creating NS Checkin '.$addResponse);
         }
     }
 
