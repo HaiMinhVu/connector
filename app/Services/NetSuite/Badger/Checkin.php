@@ -79,7 +79,7 @@ class Checkin extends Service {
     }
 
     private function checkExistingByNSID($nsid) {
-        return BadgerAccount::where('nsid', $nsid)->exists();
+        return is_int($nsid) && BadgerAccount::where('nsid', $nsid)->exists();
     }
 
     private function checkExistingByName($name) {
@@ -208,7 +208,7 @@ class Checkin extends Service {
             echo " Success.".PHP_EOL;
             $this->updateCheckin($id);
         } else {
-            dd('Error Creating NS Checkin '.$addResponse);
+            dd($addResponse);
         }
     }
 
