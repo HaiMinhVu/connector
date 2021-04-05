@@ -110,30 +110,27 @@ class Checkin extends Service {
     }
 
     private function processMeeting($data){
-
-
         $meeting = new CalendarEvent();
         $meeting->company = $this->createRecordRef($data->customer_id);
-        dd($meeting);
-        // $meeting = new CalendarEvent();
-        // $meeting->company = $this->createRecordRef($data->customer_id);
-        // $meeting->organizer = $this->createRecordRef($data->rep_id);
-        // $meeting->attendeeList = array(
-        //     $this->createRecordRef($data->rep_id),
-        //     $this->createRecordRef($data->customer_id)
-        // );
-        // $meeting->owner = $this->createRecordRef($data->rep_id);
-        // $meeting->location = $data->account_address;
-        // $meeting->title = "[Badger] Meet with ".$data->account_name;
-        // $meeting->message = 'Note: '.$data->note.PHP_EOL.'Decision Maker: '.$data->decision_maker_name. PHP_EOL.'Next Step: '.$data->next_step;
-        // $meeting->status = CalendarEventStatus::_tentative; //_cancelled, _completed, _confirmed or _tentative
-        // $meeting->accessLevel = CalendarEventAccessLevel::_public; //_public, _private or _showAsBusy
-        // $meeting->starttime = $meeting->endtime = $data->time;
-        // $meeting->startDate = date_format(date_create($data->date),DATE_ATOM);
-        // $meeting->allDayEvent = false;
-        // $meeting->sendEmail = false;
-        // $meeting->customform = -110;
-        // $this->pushCheckin($this->addListRequest($meeting), $data->id);
+        $meeting = new CalendarEvent();
+        $meeting->company = $this->createRecordRef($data->customer_id);
+        $meeting->organizer = $this->createRecordRef($data->rep_id);
+        $meeting->attendeeList = array(
+            $this->createRecordRef($data->rep_id),
+            $this->createRecordRef($data->customer_id)
+        );
+        $meeting->owner = $this->createRecordRef($data->rep_id);
+        $meeting->location = $data->account_address;
+        $meeting->title = "[Badger] Meet with ".$data->account_name;
+        $meeting->message = 'Note: '.$data->note.PHP_EOL.'Decision Maker: '.$data->decision_maker_name. PHP_EOL.'Next Step: '.$data->next_step;
+        $meeting->status = CalendarEventStatus::_tentative; //_cancelled, _completed, _confirmed or _tentative
+        $meeting->accessLevel = CalendarEventAccessLevel::_public; //_public, _private or _showAsBusy
+        $meeting->starttime = $meeting->endtime = $data->time;
+        $meeting->startDate = date_format(date_create($data->date),DATE_ATOM);
+        $meeting->allDayEvent = false;
+        $meeting->sendEmail = false;
+        $meeting->customform = -110;
+        $this->pushCheckin($this->addListRequest($meeting), $data->id);
     }
 
     private function processPhoneCall($data){
