@@ -23,4 +23,9 @@ return [
         'token' => env('SLMK_API_TOKEN')
     ],
 
+    'qa' => [
+        'endpoint' => env('QA_API_ENDPOINT'),
+        'token' => env('QA_API_TOKEN')
+    ],
+
 ];

@@ -16,7 +16,8 @@ class Kernel extends ConsoleKernel
         Commands\SyncBadgerAccounts::class,
         Commands\SyncBadgerCheckins::class,
         Commands\SyncSalesReps::class,
-        Commands\SyncProducts::class
+        Commands\SyncProducts::class,
+        Commands\SyncReturnAuthorization::class
     ];
 
     /**
