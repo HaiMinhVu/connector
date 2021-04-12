@@ -95,7 +95,7 @@ class SavedSearch extends Service {
             'type' => $result->basic->type[0]->searchValue,
             'customer' => $result->basic->entity[0]->searchValue->internalId,
             'item' => $result->itemJoin->itemId[0]->searchValue,
-            'description' => $result->basic->memo[0]->searchValue,
+            'description' => $result->basic->memo ? $result->basic->memo[0]->searchValue : '',
             'quantity' => $result->basic->quantity ? $result->basic->quantity[0]->searchValue : 0,
             'lastModifiedDate' => $result->basic->lastModifiedDate[0]->searchValue,
         ];

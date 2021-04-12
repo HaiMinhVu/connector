@@ -10,7 +10,7 @@ use App\Services\NetSuite\ReturnAuthorization\{
 use Carbon\Carbon;
 
 
-class SyncReturnAuthorization extends Command
+class SyncTransactions extends Command
 {
 
     private $savedSearch;
@@ -20,7 +20,7 @@ class SyncReturnAuthorization extends Command
     private $fromDate;
     private $client;
 
-    protected $signature = "sync:return-authorization {--from-date= : Specify the last modified date for results}";
+    protected $signature = "sync:transactions {--from-date= : Specify the last modified date for results}";
 
 
     protected $description = "Sync RA and CM from NetSuite";
@@ -86,7 +86,8 @@ class SyncReturnAuthorization extends Command
             $this->pushToQA($this->response);
         } catch(\Exception $e) {
             $this->info("Retrying page {$page}/{$this->savedSearch->getTotalPages()}");
-            // $this->setResponse($page);
+            dd($e);
+            $this->setResponse($page);
         }
     }
 
@@ -98,10 +99,13 @@ class SyncReturnAuthorization extends Command
         ]);
     }
 
-    private function pushToQA($responses)
+    private function pushToQA($response)
     {
-        foreach ($responses as $res) {
-            $this->client->post('ns-transaction', ['json' => $res]);
+        try{
+            $this->client->post('ns-transaction/mass-update', ['json' => $response]);
+        } catch(\Exception $e) {
+            $this->info($e);
+            dd($e);
         }
     }
 
