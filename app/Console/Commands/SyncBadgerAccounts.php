@@ -116,7 +116,7 @@ class SyncBadgerAccounts extends Command
 
     private function setFromDate()
     {
-        $fromDate = ($this->option('from-date') === null) ? Carbon::now()->subDay() : $this->option('from-date');
+        $fromDate = ($this->option('from-date') === null) ? Carbon::now()->subDay(7) : $this->option('from-date');
         $this->fromDate = Carbon::parse($fromDate)->startOfDay();
         $this->savedSearch->setFromDate($fromDate);
     }
