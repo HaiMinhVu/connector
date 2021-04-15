@@ -37,7 +37,8 @@ class SyncBadgerCheckins extends Command
             $this->badgerService->downloadCheckins();
         } catch(\Exception $e) {
             $this->info("Retrying Downloading check-ins from badger");
-            $this->downloadCheckins();
+            dd($e);
+            // $this->downloadCheckins();
         }
     }
 
@@ -48,7 +49,8 @@ class SyncBadgerCheckins extends Command
             return true;
         } catch(\Exception $e) {
             $this->info("Retrying Inserting check-ins to database");
-            $this->insertCheckins();
+            dd($e);
+            // $this->insertCheckins();
         }
     }
 
@@ -58,7 +60,8 @@ class SyncBadgerCheckins extends Command
             $this->badgerCheckin->syncCheckins();
         } catch(\Exception $e) {
             $this->info("Retrying Pushing check-ins to NetSuite");
-            $this->syncCheckins();
+            dd($e);
+            // $this->syncCheckins();
         }
     }
     
