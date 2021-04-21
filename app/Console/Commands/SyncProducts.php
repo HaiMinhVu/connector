@@ -14,6 +14,7 @@ use App\Services\NetSuite\Inventory\Search as InventorySearch;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\PushNetsuiteProductsToAPI;
 use Queue;
+use Carbon\Carbon;
 
 /**
  * Class deletePostsCommand
