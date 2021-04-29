@@ -118,17 +118,25 @@ class SavedSearch extends Service {
 
     private function parseInitialResult($result)
     {
+        // $currentdate = Carbon::now()->toAtomString();
+        // $salesRep = SalesRep::where('nsid', $result->basic->salesRep[0]->searchValue->internalId)->first();
+        // return [
+        //     'nsid' => $result->basic->internalId[0]->searchValue->internalId,
+        //     "_Address" => str_replace(["\n","\r\n","\r"], " ", $result->basic->address[0]->searchValue),
+        //     "_Phone" => $result->basic->phone ? $result->basic->phone[0]->searchValue : '',
+        //     "_AccountOwner" => optional($salesRep)->email,
+        //     "Business Email" => $result->basic->email ? $result->basic->email[0]->searchValue : '',
+        //     "SalesRepNSID" => $result->basic->salesRep[0]->searchValue->internalId,
+        //     "territory" => $result->basic->territory ? $this->territory->getTerritory($result->basic->territory[0]->searchValue->internalId) : '',
+        //     "Status" => $result->basic->entityStatus ? $this->customerStatus->getStatus($result->basic->entityStatus[0]->searchValue->internalId) : '',
+        //     "lastModifiedDate" => $currentdate
+        // ];
         $currentdate = Carbon::now()->toAtomString();
-        $salesRep = SalesRep::where('nsid', $result->basic->salesRep[0]->searchValue->internalId)->first();
         return [
             'nsid' => $result->basic->internalId[0]->searchValue->internalId,
             "_Address" => str_replace(["\n","\r\n","\r"], " ", $result->basic->address[0]->searchValue),
-            "_Phone" => $result->basic->phone ? $result->basic->phone[0]->searchValue : '',
-            "_AccountOwner" => optional($salesRep)->email,
             "Business Email" => $result->basic->email ? $result->basic->email[0]->searchValue : '',
             "SalesRepNSID" => $result->basic->salesRep[0]->searchValue->internalId,
-            "territory" => $result->basic->territory ? $this->territory->getTerritory($result->basic->territory[0]->searchValue->internalId) : '',
-            "Status" => $result->basic->entityStatus ? $this->customerStatus->getStatus($result->basic->entityStatus[0]->searchValue->internalId) : '',
             "lastModifiedDate" => $currentdate
         ];
     }

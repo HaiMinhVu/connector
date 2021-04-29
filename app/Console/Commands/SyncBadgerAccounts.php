@@ -73,6 +73,7 @@ class SyncBadgerAccounts extends Command
         $this->initProgressBar();
         $this->updateAccounts($this->response);
         $this->runSearches();
+        $this->getUpdatedAccounts();
         $this->pushToBadger($this->fromDate);
     }
 
@@ -135,5 +136,18 @@ class SyncBadgerAccounts extends Command
     {
         $this->info("Pushing to Badger");
         $this->badgerService->exportCustomers($fromDate);
+    }
+
+    private function getUpdatedAccounts()
+    {
+        $badgerAccounts = BadgerAccount::where('lastModifiedDate', '>=', $this->fromDate->toDateTimeString())->get();
+        $badgerAccounts = $badgerAccounts->map(function($badgerAccount){
+            $account = $this->savedSearch->getRecords($badgerAccount);
+            BadgerAccount::updateOrCreate(
+                ['nsid' => $badgerAccount['nsid']], 
+                $account
+            );
+            echo $badgerAccount['nsid'].PHP_EOL;
+        });
     }
 }
