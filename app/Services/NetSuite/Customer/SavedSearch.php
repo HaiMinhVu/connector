@@ -7,10 +7,6 @@ use App\Models\{
     CustEntity,
     SalesRep
 };
-use App\Services\NetSuite\CustomList\{
-    Territory,
-    CustomerStatus
-};
 use Carbon\Carbon;
 use NetSuite\Classes\{
     CustomerSearch,
@@ -34,14 +30,11 @@ class SavedSearch extends Service {
     private $territory;
     private $customerStatus;
 
-    public function __construct(Territory $territory, CustomerStatus $customerStatus)
+    public function __construct()
     {
         parent::__construct();
         $this->setSavedSearchScriptId();
         $this->setSearchCriteria();
-
-        $this->territory = $territory;
-        $this->customerStatus = $customerStatus;
     }
 
     public function setFromDate($dateString)
@@ -118,25 +111,14 @@ class SavedSearch extends Service {
 
     private function parseInitialResult($result)
     {
-        // $currentdate = Carbon::now()->toAtomString();
-        // $salesRep = SalesRep::where('nsid', $result->basic->salesRep[0]->searchValue->internalId)->first();
-        // return [
-        //     'nsid' => $result->basic->internalId[0]->searchValue->internalId,
-        //     "_Address" => str_replace(["\n","\r\n","\r"], " ", $result->basic->address[0]->searchValue),
-        //     "_Phone" => $result->basic->phone ? $result->basic->phone[0]->searchValue : '',
-        //     "_AccountOwner" => optional($salesRep)->email,
-        //     "Business Email" => $result->basic->email ? $result->basic->email[0]->searchValue : '',
-        //     "SalesRepNSID" => $result->basic->salesRep[0]->searchValue->internalId,
-        //     "territory" => $result->basic->territory ? $this->territory->getTerritory($result->basic->territory[0]->searchValue->internalId) : '',
-        //     "Status" => $result->basic->entityStatus ? $this->customerStatus->getStatus($result->basic->entityStatus[0]->searchValue->internalId) : '',
-        //     "lastModifiedDate" => $currentdate
-        // ];
         $currentdate = Carbon::now()->toAtomString();
+        $salesRep = SalesRep::where('nsid', $result->basic->salesRep[0]->searchValue->internalId)->first();
         return [
             'nsid' => $result->basic->internalId[0]->searchValue->internalId,
             "_Address" => str_replace(["\n","\r\n","\r"], " ", $result->basic->address[0]->searchValue),
+            "_Phone" => $result->basic->phone ? $result->basic->phone[0]->searchValue : '',
+            "_AccountOwner" => optional($salesRep)->email,
             "Business Email" => $result->basic->email ? $result->basic->email[0]->searchValue : '',
-            "SalesRepNSID" => $result->basic->salesRep[0]->searchValue->internalId,
             "lastModifiedDate" => $currentdate
         ];
     }
@@ -179,15 +161,11 @@ class SavedSearch extends Service {
         $nsid = $data['nsid'];
         $response = self::getCustomerRecords($nsid);
         $records = $response->readResponse->record;
-        $salesRep = SalesRep::where('nsid', $data['SalesRepNSID'])->first();
         $type = optional($records->customFieldList->customField->get('Business Model'));
         $isPerson = $type ? ($type->first() == 'Individual' ? 1 : 0) : 0;
         $contact = optional(self::getContact($records->contactRolesList));
-
         return [
             "_Name" => $records->companyName,
-            "_Phone" => preg_replace('/[^0-9]/', '', $records->phone),
-            "_AccountOwner" => optional($salesRep)->email,
             "Contact Name" => $contact->name ?? '',
             "Contact Email" => $contact->email ?? '',
             'is Person' => $isPerson,

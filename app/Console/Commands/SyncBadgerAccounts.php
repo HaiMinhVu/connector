@@ -82,6 +82,7 @@ class SyncBadgerAccounts extends Command
         try {
             $this->response = $this->savedSearch->search();
             $this->totalPages = $this->savedSearch->getTotalPages();
+            $this->info($this->totalPages);
         } catch(\Exception $e) {
             $this->info("Retrying initial search");
             $this->runInitialSearch();
@@ -140,15 +141,29 @@ class SyncBadgerAccounts extends Command
 
     private function getUpdatedAccounts()
     {
-        $this->info('Update again accounts');
+        $this->info('Update detail accounts');
         $badgerAccounts = BadgerAccount::where('lastModifiedDate', '>=', $this->fromDate->toDateTimeString())->get();
         $badgerAccounts = $badgerAccounts->map(function($badgerAccount){
-            $account = $this->savedSearch->getRecords($badgerAccount);
-            BadgerAccount::updateOrCreate(
-                ['nsid' => $badgerAccount['nsid']], 
-                $account
-            );
-            // echo $badgerAccount['nsid'].PHP_EOL;
+            $account = $this->getAccountDetail($badgerAccount);
+            if($account){
+                echo $badgerAccount['nsid'];
+                BadgerAccount::updateOrCreate(
+                    ['nsid' => $badgerAccount['nsid']], 
+                    $account
+                );
+                echo ' complete'.PHP_EOL;
+            }
         });
+    }
+
+    private function getAccountDetail($badgerAccount)
+    {
+        try{
+            $account = $this->savedSearch->getRecords($badgerAccount);
+            return $account;
+        } catch (\Exception $e){
+            $this->info('Retrying get account detail');
+            $this->getAccountDetail($badgerAccount);
+        }
     }
 }
