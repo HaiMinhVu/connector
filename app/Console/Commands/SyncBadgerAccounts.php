@@ -140,6 +140,7 @@ class SyncBadgerAccounts extends Command
 
     private function getUpdatedAccounts()
     {
+        $this->info('Update again accounts');
         $badgerAccounts = BadgerAccount::where('lastModifiedDate', '>=', $this->fromDate->toDateTimeString())->get();
         $badgerAccounts = $badgerAccounts->map(function($badgerAccount){
             $account = $this->savedSearch->getRecords($badgerAccount);
@@ -147,7 +148,7 @@ class SyncBadgerAccounts extends Command
                 ['nsid' => $badgerAccount['nsid']], 
                 $account
             );
-            echo $badgerAccount['nsid'].PHP_EOL;
+            // echo $badgerAccount['nsid'].PHP_EOL;
         });
     }
 }
