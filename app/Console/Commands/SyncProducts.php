@@ -76,7 +76,7 @@ class SyncProducts extends Command
 
     private function setFromDate()
     {
-        $fromDate = ($this->option('from-date') === null) ? Carbon::now()->subDay(7) : $this->option('from-date');
+        $fromDate = ($this->option('from-date') === null) ? Carbon::now()->subDay(2) : $this->option('from-date');
         $this->inventorySearch->setFromDate($fromDate);
     }
 
