@@ -118,7 +118,7 @@ class SyncBadgerAccounts extends Command
 
     private function setFromDate()
     {
-        $fromDate = ($this->option('from-date') === null) ? Carbon::now()->subDay(7) : $this->option('from-date');
+        $fromDate = ($this->option('from-date') === null) ? Carbon::now()->subDay(2) : $this->option('from-date');
         $this->fromDate = Carbon::parse($fromDate)->startOfDay();
         $this->savedSearch->setFromDate($fromDate);
     }
@@ -146,24 +146,35 @@ class SyncBadgerAccounts extends Command
         $badgerAccounts = $badgerAccounts->map(function($badgerAccount){
             $account = $this->getAccountDetail($badgerAccount);
             if($account){
-                echo $badgerAccount['nsid'];
+                echo 'Processing NSID '.$badgerAccount['nsid'];
                 BadgerAccount::updateOrCreate(
                     ['nsid' => $badgerAccount['nsid']], 
                     $account
                 );
-                echo ' complete'.PHP_EOL;
+                echo '. complete'.PHP_EOL;
+            }
+            else{
+                echo 'Skip '.$badgerAccount['nsid'].PHP_EOL;
             }
         });
     }
 
     private function getAccountDetail($badgerAccount)
     {
+        $count = 0;
         try{
             $account = $this->savedSearch->getRecords($badgerAccount);
             return $account;
         } catch (\Exception $e){
             $this->info('Retrying get account detail');
-            $this->getAccountDetail($badgerAccount);
+            $count += 1;
+            if($count > 10){
+                return null;
+            }
+            else{
+                $this->getAccountDetail($badgerAccount);
+            }
+            
         }
     }
 }
