@@ -116,7 +116,7 @@ class SavedSearch extends Service {
         return [
             'nsid' => $result->basic->internalId[0]->searchValue->internalId,
             "_Address" => str_replace(["\n","\r\n","\r"], " ", $result->basic->address[0]->searchValue),
-            "_Phone" => $result->basic->phone ? $result->basic->phone[0]->searchValue : '',
+            "_Phone" => preg_replace('/[^0-9]/', '', $result->basic->phone ? $result->basic->phone[0]->searchValue : ''),
             "_AccountOwner" => optional($salesRep)->email,
             "Business Email" => $result->basic->email ? $result->basic->email[0]->searchValue : '',
             "lastModifiedDate" => $currentdate
