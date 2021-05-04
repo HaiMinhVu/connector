@@ -156,7 +156,7 @@ class Badger {
     }
 
     private function processFile($filename){
-        $file = fopen('storage/app/'.$filename, 'r');
+        $file = fopen(storage_path()."/app/{$filename}", 'r');
         $processedAll = 1;
         $firstline = TRUE;
         while (($row = fgetcsv($file)) !== FALSE) {
