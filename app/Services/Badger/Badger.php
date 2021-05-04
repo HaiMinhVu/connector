@@ -144,13 +144,12 @@ class Badger {
     public function insertCheckins(){
         $filenames = $this->getAllFilenames();
         foreach ($filenames as $filename) {
-            $file = Storage::disk('local')->get($filename);
             $this->processFile($filename);
         }
     }
 
     private function processFile($filename){
-        $file = fopen('storage/app/'.$filename, 'r');
+        $file = fopen(storage_path()."/app/{$filename}", 'r');
         $processedAll = 1;
         $firstline = TRUE;
         while (($row = fgetcsv($file)) !== FALSE) {
