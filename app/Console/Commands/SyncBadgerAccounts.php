@@ -82,7 +82,6 @@ class SyncBadgerAccounts extends Command
         try {
             $this->response = $this->savedSearch->search();
             $this->totalPages = $this->savedSearch->getTotalPages();
-            $this->info($this->totalPages);
         } catch(\Exception $e) {
             $this->info("Retrying initial search");
             $this->runInitialSearch();
@@ -146,12 +145,10 @@ class SyncBadgerAccounts extends Command
         $badgerAccounts = $badgerAccounts->map(function($badgerAccount){
             $account = $this->getAccountDetail($badgerAccount);
             if($account){
-                echo 'Processing NSID '.$badgerAccount['nsid'];
                 BadgerAccount::updateOrCreate(
                     ['nsid' => $badgerAccount['nsid']], 
                     $account
                 );
-                echo '. complete'.PHP_EOL;
             }
             else{
                 echo 'Skip '.$badgerAccount['nsid'].PHP_EOL;

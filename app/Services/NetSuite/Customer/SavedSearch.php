@@ -50,9 +50,7 @@ class SavedSearch extends Service {
     {
         $this->search->criteria = new CustomerSearch();
 		$this->search->criteria->basic = new CustomerSearchBasic();
-        // $this->search->criteria->basic->isPerson = null;
-        // $this->search->criteria->basic->isDefaultShipping = new SearchBooleanField;
-        // $this->search->criteria->basic->isDefaultShipping->searchValue = true;
+        $this->search->criteria->basic->isPerson = null;
     }
 
     public function getTotalPages()
@@ -103,15 +101,12 @@ class SavedSearch extends Service {
         return $results->filter(function($item){
             $hasAddress = !!$item->basic->address;
             $hasSalesRep = !!$item->basic->salesRep;
-            $isDefaultShippingAddress = $item->basic->isDefaultShipping[0]->searchValue;
-
-            return $hasAddress && $hasSalesRep && $isDefaultShippingAddress;
+            return $hasAddress && $hasSalesRep;
         });
     }
 
     private function parseInitialResult($result)
     {
-        $currentdate = Carbon::now()->toAtomString();
         $salesRep = SalesRep::where('nsid', $result->basic->salesRep[0]->searchValue->internalId)->first();
         return [
             'nsid' => $result->basic->internalId[0]->searchValue->internalId,
@@ -119,7 +114,7 @@ class SavedSearch extends Service {
             "_Phone" => preg_replace('/[^0-9]/', '', $result->basic->phone ? $result->basic->phone[0]->searchValue : ''),
             "_AccountOwner" => optional($salesRep)->email,
             "Business Email" => $result->basic->email ? $result->basic->email[0]->searchValue : '',
-            "lastModifiedDate" => $currentdate
+            "lastModifiedDate" => $result->basic->lastModifiedDate ? $result->basic->lastModifiedDate[0]->searchValue : '',
         ];
     }
 
