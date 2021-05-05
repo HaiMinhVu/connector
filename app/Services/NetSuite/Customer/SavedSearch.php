@@ -50,9 +50,9 @@ class SavedSearch extends Service {
     {
         $this->search->criteria = new CustomerSearch();
 		$this->search->criteria->basic = new CustomerSearchBasic();
-        $this->search->criteria->basic->isPerson = null;
-        $this->search->criteria->basic->isDefaultShipping = new SearchBooleanField;
-        $this->search->criteria->basic->isDefaultShipping->searchValue = true;
+        // $this->search->criteria->basic->isPerson = null;
+        // $this->search->criteria->basic->isDefaultShipping = new SearchBooleanField;
+        // $this->search->criteria->basic->isDefaultShipping->searchValue = true;
     }
 
     public function getTotalPages()
