@@ -102,7 +102,8 @@ class SyncTransactions extends Command
     private function pushToQA($response)
     {
         try{
-            $this->client->post('ns-transaction/mass-update', ['json' => $response]);
+            $res = $this->client->post('ns-transaction/mass-update', ['json' => $response]);
+            return $res;
         } catch(\Exception $e) {
             $this->info($e);
             dd($e);
